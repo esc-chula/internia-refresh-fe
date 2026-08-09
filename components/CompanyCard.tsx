@@ -12,6 +12,7 @@ const labels = [
 
 export function CompanyCard({ company }: { company: Company }) {
   const recommendPct = Math.round((company.recommendCount / company.reviewCount) * 100);
+  const recommendFace = scoreToFace(recommendPct / 20);
 
   return (
     <Link
@@ -50,7 +51,7 @@ export function CompanyCard({ company }: { company: Company }) {
         </div>
 
         <div className="text-center text-sm leading-snug text-zinc-500">
-          <span className="font-semibold text-zinc-900">{recommendPct}%</span> แนะนำให้สมัคร
+          <span className={`font-semibold ${scoreTextClass[recommendFace]}`}>{recommendPct}%</span> แนะนำให้สมัคร
         </div>
       </div>
     </Link>
