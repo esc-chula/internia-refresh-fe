@@ -92,7 +92,7 @@ export function CompanyReviewsExplore({ reviews }: { reviews: Review[] }) {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="ค้นหาตำแหน่งฝึกงาน"
-          className="h-10 min-w-[180px] flex-1 rounded-full border border-zinc-300 bg-white px-4 text-[0.86rem] text-zinc-700 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-internia-primary/10 sm:flex-none"
+          className="h-10 min-w-[180px] flex-1 rounded-full border border-zinc-300 bg-white px-4 text-sm text-zinc-700 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-internia-primary/10 sm:flex-none"
         />
         <CustomSelect value={department} onChange={setDepartment} options={departmentOptions} />
         <CustomSelect value={intania} onChange={setIntania} options={intaniaOptions} />
@@ -103,7 +103,7 @@ export function CompanyReviewsExplore({ reviews }: { reviews: Review[] }) {
         <button
           type="button"
           onClick={() => setDirection((value) => (value === "desc" ? "asc" : "desc"))}
-          className="inline-flex h-10 items-center gap-1.5 rounded-full border border-zinc-300 bg-white px-4 text-[0.86rem] text-zinc-700 transition hover:border-zinc-400"
+          className="inline-flex h-10 items-center gap-1.5 rounded-full border border-zinc-300 bg-white px-4 text-sm text-zinc-700 transition hover:border-zinc-400"
           title={direction === "desc" ? "มากไปน้อย" : "น้อยไปมาก"}
         >
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -119,7 +119,7 @@ export function CompanyReviewsExplore({ reviews }: { reviews: Review[] }) {
       ))}
 
       {filtered.length === 0 && (
-        <p className="rounded-2xl border border-dashed border-zinc-200 py-12 text-center text-[0.92rem] text-zinc-400">
+        <p className="rounded-2xl border border-dashed border-zinc-200 py-12 text-center text-sm text-zinc-400">
           ไม่พบรีวิวที่ตรงกับเงื่อนไขที่เลือก
         </p>
       )}

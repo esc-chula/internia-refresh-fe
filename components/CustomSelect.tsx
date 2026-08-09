@@ -35,7 +35,7 @@ export function CustomSelect({
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex h-10 w-full items-center justify-between gap-2 rounded-full border border-zinc-300 bg-white pl-4 pr-3 text-[0.86rem] text-zinc-700 outline-none transition hover:border-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-internia-primary/10"
+        className="flex h-10 w-full items-center justify-between gap-2 rounded-full border border-zinc-300 bg-white pl-4 pr-3 text-sm text-zinc-700 outline-none transition hover:border-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-internia-primary/10"
       >
         <span className={`whitespace-nowrap ${!selected && placeholder ? "text-zinc-400" : ""}`}>
           {selected?.label ?? placeholder ?? ""}
@@ -66,7 +66,7 @@ export function CustomSelect({
                 onChange(option.value);
                 setOpen(false);
               }}
-              className={`block w-full whitespace-nowrap rounded-full px-4 py-2 text-left text-[0.86rem] transition hover:bg-zinc-50 ${
+              className={`block w-full whitespace-nowrap rounded-full px-4 py-2 text-left text-sm transition hover:bg-zinc-50 ${
                 option.value === value ? "font-semibold text-internia-primary" : "text-zinc-700"
               }`}
             >

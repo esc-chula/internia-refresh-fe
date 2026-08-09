@@ -13,7 +13,7 @@ export function SiteHeader() {
 
         <Link
           href="/create/line-man-wongnai"
-          className="inline-flex h-9 items-center rounded-full bg-white px-4 text-[0.86rem] font-semibold text-black no-underline shadow-crisp transition hover:bg-white/90"
+          className="inline-flex h-9 items-center rounded-full bg-white px-4 text-sm font-semibold text-black no-underline shadow-crisp transition hover:bg-white/90"
         >
           เขียนรีวิว
         </Link>

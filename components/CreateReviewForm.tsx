@@ -102,8 +102,8 @@ export function CreateReviewForm() {
                       >
                         <CompanyLogo id={item.id} size={36} />
                         <div className="min-w-0">
-                          <div className="truncate text-[0.92rem] font-semibold text-zinc-900">{item.name}</div>
-                          <div className="truncate text-[0.8rem] text-zinc-500">{item.tag}</div>
+                          <div className="truncate text-sm font-semibold text-zinc-900">{item.name}</div>
+                          <div className="truncate text-sm text-zinc-500">{item.tag}</div>
                         </div>
                       </button>
                     ))}
@@ -124,7 +124,7 @@ export function CreateReviewForm() {
                 </Field>
 
                 <Field label="โลโก้บริษัท">
-                  <label className="flex h-11 w-full cursor-pointer items-center gap-2.5 rounded-full border border-dashed border-zinc-300 bg-white px-4 text-[0.92rem] text-zinc-500 transition hover:border-zinc-400">
+                  <label className="flex h-11 w-full cursor-pointer items-center gap-2.5 rounded-full border border-dashed border-zinc-300 bg-white px-4 text-sm text-zinc-500 transition hover:border-zinc-400">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-zinc-400">
                       <path d="M12 16V4m0 0 4 4m-4-4-4 4" />
                       <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
@@ -166,7 +166,7 @@ export function CreateReviewForm() {
             </Field>
 
             <div className="grid gap-2">
-              <div className="text-[0.92rem] font-medium leading-[1.4] text-zinc-700">ค่าตอบแทน</div>
+              <div className="text-sm font-medium leading-[1.4] text-zinc-700">ค่าตอบแทน</div>
               <div className="grid gap-[10px]">
                 <div className="grid gap-[10px] sm:grid-cols-2">
                   <ToggleBox selected={salaryMode === "no"} onClick={() => setSalaryMode(salaryMode === "no" ? null : "no")}>
@@ -191,7 +191,7 @@ export function CreateReviewForm() {
             </div>
 
             <div className="grid gap-2">
-              <div className="text-[0.92rem] font-medium leading-[1.4] text-zinc-700">ชั้นปีที่เปิดรับ</div>
+              <div className="text-sm font-medium leading-[1.4] text-zinc-700">ชั้นปีที่เปิดรับ</div>
               <div className="grid gap-[10px]">
                 <div className="grid gap-[10px] sm:grid-cols-2">
                   <ToggleBox selected={yearLimit === "no"} onClick={() => setYearLimit(yearLimit === "no" ? null : "no")}>
@@ -222,7 +222,7 @@ export function CreateReviewForm() {
                             }
                             className="h-[18px] w-[18px] accent-internia-primary"
                           />
-                          <span className="text-[0.92rem] text-zinc-700">ชั้นปีที่ {value}</span>
+                          <span className="text-sm text-zinc-700">ชั้นปีที่ {value}</span>
                         </label>
                       );
                     })}
@@ -232,7 +232,7 @@ export function CreateReviewForm() {
             </div>
 
             <div className="grid gap-2">
-              <div className="text-[0.92rem] font-medium leading-[1.4] text-zinc-700">เกรดเฉลี่ยขั้นต่ำ</div>
+              <div className="text-sm font-medium leading-[1.4] text-zinc-700">เกรดเฉลี่ยขั้นต่ำ</div>
               <div className="grid gap-[10px]">
                 <div className="grid gap-[10px] sm:grid-cols-2">
                   <ToggleBox selected={gpaMode === "no"} onClick={() => setGpaMode(gpaMode === "no" ? null : "no")}>
@@ -265,12 +265,12 @@ export function CreateReviewForm() {
               </h2>
               {scoreFields.map(([key, title, low, high]) => (
                 <div key={key} className="grid gap-2">
-                  <div className="text-[0.92rem] font-medium leading-[1.4] text-zinc-700">
+                  <div className="text-sm font-medium leading-[1.4] text-zinc-700">
                     {title} <span className="text-internia-primary">*</span>
                   </div>
                   <div className="grid gap-3">
                     <div className="grid items-center gap-3 max-sm:grid-cols-[minmax(72px,1fr)_auto_minmax(72px,1fr)] sm:grid-cols-[minmax(92px,1fr)_auto_minmax(92px,1fr)]">
-                      <div className="text-right text-[0.78rem] leading-[1.4] text-zinc-500 max-sm:text-[0.72rem] max-sm:leading-[1.35]">{low}</div>
+                      <div className="text-right text-xs leading-[1.4] text-zinc-500 max-sm:text-xs max-sm:leading-[1.35]">{low}</div>
                       <div className="grid grid-cols-5 justify-center gap-[0.3rem] max-sm:gap-[0.24rem]">
                         {[1, 2, 3, 4, 5].map((score) => {
                           const selected = scores[key] === score;
@@ -298,7 +298,7 @@ export function CreateReviewForm() {
                           );
                         })}
                       </div>
-                      <div className="text-left text-[0.78rem] leading-[1.4] text-zinc-500 max-sm:text-[0.72rem] max-sm:leading-[1.35]">{high}</div>
+                      <div className="text-left text-xs leading-[1.4] text-zinc-500 max-sm:text-xs max-sm:leading-[1.35]">{high}</div>
                     </div>
                   </div>
                 </div>
@@ -335,12 +335,12 @@ export function CreateReviewForm() {
                 onChange={() => setAnonymous((value) => !value)}
                 className="h-[18px] w-[18px] accent-internia-primary"
               />
-              <span className="text-[0.92rem] text-zinc-700">ส่งรีวิวแบบไม่ระบุตัวตน</span>
+              <span className="text-sm text-zinc-700">ส่งรีวิวแบบไม่ระบุตัวตน</span>
             </label>
           </div>
 
         <div className="grid">
-          <button type="button" className="min-h-11 rounded-full bg-internia-primary text-[0.92rem] font-semibold text-white shadow-crisp transition hover:bg-internia-primaryDark">
+          <button type="button" className="min-h-11 rounded-full bg-internia-primary text-sm font-semibold text-white shadow-crisp transition hover:bg-internia-primaryDark">
             Submit review
           </button>
         </div>
@@ -417,7 +417,7 @@ function ThumbsIcon() {
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <label className="grid gap-2">
-      <span className="text-[0.92rem] font-medium leading-[1.4] text-zinc-700">
+      <span className="text-sm font-medium leading-[1.4] text-zinc-700">
         {label} {required ? <span className="text-internia-primary">*</span> : null}
       </span>
       {children}
@@ -428,10 +428,10 @@ function Field({ label, required, children }: { label: string; required?: boolea
 function TextArea({ label, placeholder }: { label: string; placeholder: string }) {
   return (
     <div className="grid gap-2">
-      <p className="m-0 text-[0.92rem] font-medium leading-[1.4] text-zinc-700">{label}</p>
+      <p className="m-0 text-sm font-medium leading-[1.4] text-zinc-700">{label}</p>
       <textarea
         placeholder={placeholder}
-        className="min-h-[188px] w-full resize-y rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-[0.92rem] text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-internia-primary/10"
+        className="min-h-[188px] w-full resize-y rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-internia-primary/10"
       />
     </div>
   );
@@ -461,7 +461,7 @@ function ToggleBox({
       >
         {selected && <span className="h-2 w-2 rounded-full bg-internia-primary" />}
       </span>
-      <span className="text-[0.92rem] text-zinc-700">{children}</span>
+      <span className="text-sm text-zinc-700">{children}</span>
     </button>
   );
 }
@@ -493,7 +493,7 @@ function RecommendBox({
     <button type="button" onClick={onClick} className={`relative flex items-center gap-[10px] overflow-hidden rounded-md border px-[14px] py-3 text-left ${toneClasses}`}>
       <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: selected ? barColor : "transparent" }} />
       <ThumbIcon type={tone} color={iconColor} />
-      <span className="text-[0.92rem] text-zinc-700">{label}</span>
+      <span className="text-sm text-zinc-700">{label}</span>
     </button>
   );
 }
@@ -519,4 +519,4 @@ function ThumbIcon({ type, color }: { type: "like" | "dislike"; color: string })
 }
 
 const inputClassName =
-  "h-11 w-full rounded-full border border-zinc-300 bg-white px-4 text-[0.92rem] text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-internia-primary/10";
+  "h-11 w-full rounded-full border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-internia-primary/10";

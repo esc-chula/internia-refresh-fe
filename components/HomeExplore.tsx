@@ -214,20 +214,20 @@ export function HomeExplore() {
         <h1 className="relative z-10 m-0 text-[clamp(1.9rem,7vw,3.6rem)] font-extrabold leading-[1.15] tracking-[-0.03em] text-zinc-900 md:leading-[1.05]">
           รีวิวฝึกงานที่จริงใจจาก<br className="sm:hidden" />ชาววิศวฯ จุฬาฯ
         </h1>
-        <p className="relative z-10 m-0 max-w-[560px] text-[0.98rem] leading-relaxed text-zinc-500 md:text-[1.1rem]">
+        <p className="relative z-10 m-0 max-w-[560px] text-md leading-relaxed text-zinc-500 md:text-[1.1rem]">
           ร่วมแชร์ประสบการณ์ฝึกงานของคุณ
         </p>
 
         <div className="relative z-20 w-[min(100%,640px)]">
           <form
-            className="flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white p-1.5 pl-2 shadow-lift sm:gap-2"
+            className="flex items-center gap-4 rounded-full border border-zinc-200 bg-white p-1.5 pl-2 shadow-lift sm:gap-2"
             onSubmit={(event) => {
               event.preventDefault();
               setQuery(draft);
               setPreviewFocused(false);
             }}
           >
-            <div className="flex shrink-0 rounded-full bg-zinc-100 p-1 text-[0.8rem] font-semibold">
+            <div className="flex shrink-0 rounded-full bg-zinc-100 p-1 text-xs">
               <button
                 type="button"
                 onClick={() => setMode("company")}
@@ -253,7 +253,7 @@ export function HomeExplore() {
               onBlur={() => {
                 blurTimeoutRef.current = setTimeout(() => setPreviewFocused(false), 120);
               }}
-              className="h-10 min-w-0 flex-1 bg-transparent text-[0.9rem] text-zinc-900 outline-none placeholder:text-zinc-400 sm:h-11 sm:text-base"
+              className="h-10 min-w-0 flex-1 bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400 sm:h-11 sm:text-base"
               placeholder={mode === "company" ? "ค้นหาบริษัท" : "ค้นหาบริษัทหรือตำแหน่งฝึกงาน"}
             />
             <button
@@ -282,8 +282,8 @@ export function HomeExplore() {
                 >
                   <CompanyLogo id={company.id} size={36} />
                   <div className="min-w-0">
-                    <div className="truncate text-[0.92rem] font-semibold text-zinc-900">{company.name}</div>
-                    <div className="truncate text-[0.8rem] text-zinc-500">
+                    <div className="truncate text-sm font-semibold text-zinc-900">{company.name}</div>
+                    <div className="truncate text-sm text-zinc-500">
                       {matchedPosition ? `ตำแหน่ง: ${matchedPosition}` : company.tag}
                     </div>
                   </div>
@@ -322,7 +322,7 @@ export function HomeExplore() {
           <button
             type="button"
             onClick={() => setDirection((value) => (value === "desc" ? "asc" : "desc"))}
-            className="inline-flex h-10 items-center gap-1.5 rounded-full border border-zinc-300 bg-white px-4 text-[0.86rem] text-zinc-700 transition hover:border-zinc-400"
+            className="inline-flex h-10 items-center gap-1.5 rounded-full border border-zinc-300 bg-white px-4 text-sm text-zinc-700 transition hover:border-zinc-400"
             title={direction === "desc" ? "มากไปน้อย" : "น้อยไปมาก"}
           >
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -360,7 +360,7 @@ export function HomeExplore() {
           )}
 
           {results.length === 0 && (
-            <p className="rounded-2xl border border-dashed border-zinc-200 py-12 text-center text-[0.92rem] text-zinc-400">
+            <p className="rounded-2xl border border-dashed border-zinc-200 py-12 text-center text-sm text-zinc-400">
               ไม่พบผลลัพธ์ที่ตรงกับเงื่อนไขที่เลือก
             </p>
           )}
@@ -368,7 +368,7 @@ export function HomeExplore() {
           {visibleCount < results.length && (
             <>
               <div ref={sentinelRef} />
-              <p className="text-center text-[0.85rem] text-zinc-400">กำลังโหลดเพิ่มเติม...</p>
+              <p className="text-center text-sm text-zinc-400">กำลังโหลดเพิ่มเติม...</p>
             </>
           )}
         </div>
