@@ -1,34 +1,23 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-30 border-b border-[#e7e5e4] bg-[#fafaf9]/90 backdrop-blur">
-      <div className="mx-auto flex w-[min(100%-24px,1120px)] items-center justify-between py-3">
-        <Link href="/" className="text-[1.15rem] font-extrabold tracking-[-0.03em] text-[#111111] no-underline">
+    <header className="sticky top-0 z-30 bg-zinc-950">
+      <div className="mx-auto flex h-16 w-[min(100%-24px,1120px)] items-center justify-between">
+        <Link href="/" className="flex items-center gap-3 text-[1.15rem] font-bold tracking-[-0.02em] text-white no-underline">
+          <Image src="/esc.png" alt="ESC" width={28} height={28} className="h-7 w-7 object-contain" />
+          <span className="h-5 w-px bg-white/20" aria-hidden="true" />
           Internia
         </Link>
 
-        <nav className="hidden items-center gap-2 md:flex">
-          <NavLink href="/">Home</NavLink>
-          <NavLink href="/linemanwongnai">Companies</NavLink>
-          <NavLink href="/company/line-man-wongnai/create">Write a review</NavLink>
-        </nav>
-
-        <div className="inline-flex items-center rounded-full border border-[#d6d3d1] bg-white px-3 py-1.5 text-[0.82rem] font-medium text-[#57534e]">
-          Prototype
-        </div>
+        <Link
+          href="/create/line-man-wongnai"
+          className="inline-flex h-9 items-center rounded-full bg-white px-4 text-[0.86rem] font-semibold text-black no-underline shadow-crisp transition hover:bg-white/90"
+        >
+          เขียนรีวิว
+        </Link>
       </div>
     </header>
-  );
-}
-
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="inline-flex h-10 items-center rounded-full px-4 text-[0.92rem] font-medium text-[#57534e] no-underline transition hover:bg-white hover:text-[#111111]"
-    >
-      {children}
-    </Link>
   );
 }

@@ -7,3 +7,6 @@ out
 !.env.example
 
 *.log
+
+/AGENTS.md
+/CLAUDE.md

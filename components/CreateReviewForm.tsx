@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { CustomSelect } from "./CustomSelect";
+import { CompanyLogo } from "./CompanyLogo";
 import { FaceIcon, scoreToFace } from "./FaceIcon";
-
-const companies = ["LINE MAN Wongnai", "PTT Digital", "Agoda", "SCB TechX"];
+import { companies as knownCompanies } from "@/lib/mock-data";
 
 const companyTypes = [
   "Banking, Finance & Investment",
@@ -20,6 +21,10 @@ const companyTypes = [
   "Other",
 ];
 
+const companyTypeOptions = companyTypes.map((option) => ({ value: option, label: option }));
+const workModeOptions = ["Work from home", "Hybrid", "Onsite"].map((option) => ({ value: option, label: option }));
+const salaryUnitOptions = ["บาท/เดือน", "บาท/วัน"].map((option) => ({ value: option, label: option }));
+
 const scoreFields = [
   ["work", "ด้านเนื้องาน", "งานไม่ค่อยมีบทบาท ไม่ชัดเจน", "งานท้าทาย ได้เรียนรู้มาก"],
   ["social", "ด้านสังคม", "ไม่ค่อยเอื้อต่อการทำงาน", "สบายใจ ทำงานร่วมกับทีมได้ดี"],
@@ -34,6 +39,7 @@ export function CreateReviewForm() {
   const [company, setCompany] = useState("");
   const [companyFocused, setCompanyFocused] = useState(false);
   const [companyType, setCompanyType] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [workMode, setWorkMode] = useState("");
   const [salaryMode, setSalaryMode] = useState<"yes" | "no" | null>(null);
   const [salaryUnit, setSalaryUnit] = useState("");
@@ -45,43 +51,60 @@ export function CreateReviewForm() {
   const [scores, setScores] = useState<Record<string, number | null>>({});
 
   const normalizedCompany = company.trim().toLowerCase();
-  const matchedCompany = companies.some((item) => item.toLowerCase() === normalizedCompany);
+  const matchedCompany = knownCompanies.some((item) => item.name.toLowerCase() === normalizedCompany);
   const showCompanyType = normalizedCompany.length > 0 && !matchedCompany;
   const filteredCompanies = useMemo(
-    () => companies.filter((item) => item.toLowerCase().includes(normalizedCompany)),
+    () => knownCompanies.filter((item) => item.name.toLowerCase().includes(normalizedCompany)).slice(0, 5),
     [normalizedCompany],
   );
   const showCompanyList = companyFocused && filteredCompanies.length > 0;
 
   return (
-    <main className="mx-auto w-[min(100%-32px,1120px)] py-7 pb-14">
-      <form className="grid justify-items-center gap-5">
-        <div className="grid w-[min(100%,760px)] gap-[26px] max-sm:w-full max-sm:gap-[22px]">
-          <FormSection title="ข้อมูลบริษัท">
+    <form className="grid justify-items-center gap-5">
+      <div className="grid w-full max-w-[760px] gap-[26px] max-sm:gap-[22px]">
+          <FormSection title="ข้อมูลบริษัท" icon={<BuildingIcon />}>
             <Field label="บริษัท" required>
               <div className="relative">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400"
+                >
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m21 21-4.3-4.3" />
+                </svg>
                 <input
                   value={company}
                   onChange={(event) => setCompany(event.target.value)}
                   onFocus={() => setCompanyFocused(true)}
                   onBlur={() => window.setTimeout(() => setCompanyFocused(false), 120)}
                   placeholder="ค้นหาหรือพิมพ์ชื่อบริษัท"
-                  className="h-[42px] w-full rounded-[3px] border border-[#bdbdbd] bg-white px-4 text-[0.92rem] text-[#232323] outline-none transition focus:border-[#222] focus:shadow-[0_0_0_1px_#222]"
+                  className={`${inputClassName} pl-11`}
                 />
                 {showCompanyList && (
-                  <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-10 overflow-hidden rounded border border-[#cfcfcf] bg-white">
+                  <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-10 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-lift">
                     {filteredCompanies.map((item) => (
                       <button
-                        key={item}
+                        key={item.id}
                         type="button"
                         onMouseDown={(event) => {
                           event.preventDefault();
-                          setCompany(item);
+                          setCompany(item.name);
                           setCompanyFocused(false);
                         }}
-                        className="block w-full bg-white px-[13px] py-[11px] text-left text-[0.92rem] text-[#232323] hover:bg-[#f5f5f5]"
+                        className="flex w-full items-center gap-3 border-b border-zinc-100 px-4 py-3 text-left transition last:border-b-0 hover:bg-zinc-50"
                       >
-                        {item}
+                        <CompanyLogo id={item.id} size={36} />
+                        <div className="min-w-0">
+                          <div className="truncate text-[0.92rem] font-semibold text-zinc-900">{item.name}</div>
+                          <div className="truncate text-[0.8rem] text-zinc-500">{item.tag}</div>
+                        </div>
                       </button>
                     ))}
                   </div>
@@ -90,18 +113,36 @@ export function CreateReviewForm() {
             </Field>
 
             {showCompanyType && (
-              <Field label="ประเภทบริษัท" required>
-                <CustomSelect
-                  value={companyType}
-                  onChange={setCompanyType}
-                  placeholder="เลือกประเภทบริษัท"
-                  options={companyTypes}
-                />
-              </Field>
+              <>
+                <Field label="ประเภทบริษัท" required>
+                  <CustomSelect
+                    value={companyType}
+                    onChange={setCompanyType}
+                    placeholder="เลือกประเภทบริษัท"
+                    options={companyTypeOptions}
+                  />
+                </Field>
+
+                <Field label="โลโก้บริษัท">
+                  <label className="flex h-11 w-full cursor-pointer items-center gap-2.5 rounded-full border border-dashed border-zinc-300 bg-white px-4 text-[0.92rem] text-zinc-500 transition hover:border-zinc-400">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-zinc-400">
+                      <path d="M12 16V4m0 0 4 4m-4-4-4 4" />
+                      <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+                    </svg>
+                    <span className="truncate">{logoFile ? logoFile.name : "อัปโหลดโลโก้บริษัท (ไม่บังคับ)"}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)}
+                    />
+                  </label>
+                </Field>
+              </>
             )}
           </FormSection>
 
-          <FormSection title="ข้อมูลการฝึกงาน">
+          <FormSection title="ข้อมูลการฝึกงาน" icon={<BriefcaseIcon />}>
             <Field label="ตำแหน่งที่ฝึกงาน" required>
               <input className={inputClassName} placeholder="ตำแหน่งที่ฝึกงาน" />
             </Field>
@@ -120,12 +161,12 @@ export function CreateReviewForm() {
                 value={workMode}
                 onChange={setWorkMode}
                 placeholder="เลือกรูปแบบการทำงาน"
-                options={["Work from home", "Hybrid", "Onsite"]}
+                options={workModeOptions}
               />
             </Field>
 
             <div className="grid gap-2">
-              <div className="text-[0.92rem] font-medium leading-[1.4] text-[#232323]">ค่าตอบแทน</div>
+              <div className="text-[0.92rem] font-medium leading-[1.4] text-zinc-700">ค่าตอบแทน</div>
               <div className="grid gap-[10px]">
                 <div className="grid gap-[10px] sm:grid-cols-2">
                   <ToggleBox selected={salaryMode === "no"} onClick={() => setSalaryMode(salaryMode === "no" ? null : "no")}>
@@ -142,7 +183,7 @@ export function CreateReviewForm() {
                       value={salaryUnit}
                       onChange={setSalaryUnit}
                       placeholder="เลือกหน่วย"
-                      options={["บาท/เดือน", "บาท/วัน"]}
+                      options={salaryUnitOptions}
                     />
                   </div>
                 )}
@@ -150,7 +191,7 @@ export function CreateReviewForm() {
             </div>
 
             <div className="grid gap-2">
-              <div className="text-[0.92rem] font-medium leading-[1.4] text-[#232323]">ชั้นปีที่เปิดรับ</div>
+              <div className="text-[0.92rem] font-medium leading-[1.4] text-zinc-700">ชั้นปีที่เปิดรับ</div>
               <div className="grid gap-[10px]">
                 <div className="grid gap-[10px] sm:grid-cols-2">
                   <ToggleBox selected={yearLimit === "no"} onClick={() => setYearLimit(yearLimit === "no" ? null : "no")}>
@@ -167,8 +208,8 @@ export function CreateReviewForm() {
                       return (
                         <label
                           key={value}
-                          className={`flex cursor-pointer items-center gap-[10px] rounded-[4px] border px-[14px] py-3 ${
-                            checked ? "border-[#222] bg-white" : "border-[#d5d5d5] bg-white"
+                          className={`flex cursor-pointer items-center gap-[10px] rounded-md border px-[14px] py-3 ${
+                            checked ? "border-zinc-900 bg-white" : "border-zinc-300 bg-white"
                           }`}
                         >
                           <input
@@ -179,9 +220,9 @@ export function CreateReviewForm() {
                                 checked ? current.filter((item) => item !== value) : [...current, value],
                               )
                             }
-                            className="h-[18px] w-[18px] accent-[#111827]"
+                            className="h-[18px] w-[18px] accent-internia-primary"
                           />
-                          <span className="text-[0.92rem] text-[#232323]">ชั้นปีที่ {value}</span>
+                          <span className="text-[0.92rem] text-zinc-700">ชั้นปีที่ {value}</span>
                         </label>
                       );
                     })}
@@ -191,7 +232,7 @@ export function CreateReviewForm() {
             </div>
 
             <div className="grid gap-2">
-              <div className="text-[0.92rem] font-medium leading-[1.4] text-[#232323]">เกรดเฉลี่ยขั้นต่ำ</div>
+              <div className="text-[0.92rem] font-medium leading-[1.4] text-zinc-700">เกรดเฉลี่ยขั้นต่ำ</div>
               <div className="grid gap-[10px]">
                 <div className="grid gap-[10px] sm:grid-cols-2">
                   <ToggleBox selected={gpaMode === "no"} onClick={() => setGpaMode(gpaMode === "no" ? null : "no")}>
@@ -206,24 +247,30 @@ export function CreateReviewForm() {
             </div>
           </FormSection>
 
-          <FormSection title="รีวิว">
+          <FormSection title="รีวิว" icon={<MessageIcon />}>
             <TextArea label="ขั้นตอนการสมัคร" placeholder="สมัครผ่านช่องทางไหน มีกี่รอบ ใช้เวลานานไหม ต้องเตรียมอะไรเป็นพิเศษ" />
             <TextArea label="งานที่ได้รับ" placeholder="หน้าที่ที่รับผิดชอบ โปรเจคที่ได้ทำ ความรู้หรือเครื่องมือที่ใช้ เนื้องานตรงกับตำแหน่งที่สมัครไหม" />
-            <TextArea label="บรรยากาศการทำงาน" placeholder="บรรยากาศภายในทีม วัฒนธรรมองค์กร สวัสดิการ การเดินทาง" />
+            <TextArea label="บรรยากาศการทำงาน" placeholder="บรรยากาศภายในทีม วัฒนธรรมองค์กร พี่เลี้ยง" />
+            <TextArea label="สวัสดิการและการเดินทาง" placeholder="สวัสดิการที่ได้รับ สิ่งอำนวยความสะดวก การเดินทางไปทำงาน" />
             <TextArea label="สิ่งที่อยากบอกต่อ" placeholder="ชอบอะไร ไม่ชอบอะไร ได้เรียนรู้อะไร และอยากแนะนำคนที่สนใจว่าอะไร" />
           </FormSection>
 
           <section className="grid gap-[14px]">
             <div className="grid gap-[1.4rem]">
-              <h2 className="m-0 text-[1.2rem] font-bold">แบบประเมิน</h2>
+              <h2 className="m-0 flex items-center gap-2 text-[1.2rem] font-bold text-zinc-900">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-internia-primarySoft text-internia-primary">
+                  <StarIcon />
+                </span>
+                แบบประเมิน
+              </h2>
               {scoreFields.map(([key, title, low, high]) => (
                 <div key={key} className="grid gap-2">
-                  <div className="text-[0.92rem] font-medium leading-[1.4] text-[#232323]">
-                    {title} <span className="text-[#b91c1c]">*</span>
+                  <div className="text-[0.92rem] font-medium leading-[1.4] text-zinc-700">
+                    {title} <span className="text-internia-primary">*</span>
                   </div>
                   <div className="grid gap-3">
                     <div className="grid items-center gap-3 max-sm:grid-cols-[minmax(72px,1fr)_auto_minmax(72px,1fr)] sm:grid-cols-[minmax(92px,1fr)_auto_minmax(92px,1fr)]">
-                      <div className="text-right text-[0.78rem] leading-[1.4] text-[#444] max-sm:text-[0.72rem] max-sm:leading-[1.35]">{low}</div>
+                      <div className="text-right text-[0.78rem] leading-[1.4] text-zinc-500 max-sm:text-[0.72rem] max-sm:leading-[1.35]">{low}</div>
                       <div className="grid grid-cols-5 justify-center gap-[0.3rem] max-sm:gap-[0.24rem]">
                         {[1, 2, 3, 4, 5].map((score) => {
                           const selected = scores[key] === score;
@@ -238,10 +285,10 @@ export function CreateReviewForm() {
                                 }))
                               }
                               className={`grid place-items-center overflow-hidden rounded-[10px] bg-white transition hover:scale-[1.04] ${
-                                selected ? "shadow-[0_0_0_2px_#111]" : ""
+                                selected ? "shadow-[0_0_0_2px_#000]" : ""
                               } max-sm:h-[30px] max-sm:w-[30px] h-[34px] w-[34px]`}
                               style={{
-                                boxShadow: selected ? "0 0 0 2px #111" : `inset 0 0 0 2px ${outlineColors[score - 1]}`,
+                                boxShadow: selected ? "0 0 0 2px #000" : `inset 0 0 0 2px ${outlineColors[score - 1]}`,
                               }}
                             >
                               {selected ? (
@@ -251,7 +298,7 @@ export function CreateReviewForm() {
                           );
                         })}
                       </div>
-                      <div className="text-left text-[0.78rem] leading-[1.4] text-[#444] max-sm:text-[0.72rem] max-sm:leading-[1.35]">{high}</div>
+                      <div className="text-left text-[0.78rem] leading-[1.4] text-zinc-500 max-sm:text-[0.72rem] max-sm:leading-[1.35]">{high}</div>
                     </div>
                   </div>
                 </div>
@@ -259,7 +306,7 @@ export function CreateReviewForm() {
             </div>
           </section>
 
-          <FormSection title="คุณแนะนำให้คนอื่นมาสมัครหรือไม่?">
+          <FormSection title="คุณแนะนำให้คนอื่นมาสมัครหรือไม่?" icon={<ThumbsIcon />}>
             <div className="grid gap-[10px] sm:grid-cols-2">
               <RecommendBox
                 selected={recommend === "yes"}
@@ -278,45 +325,100 @@ export function CreateReviewForm() {
 
           <div className="grid gap-2">
             <label
-              className={`flex cursor-pointer items-center gap-[10px] rounded-[4px] border px-[14px] py-3 ${
-                anonymous ? "border-[#222] bg-white" : "border-[#d5d5d5] bg-white"
+              className={`flex cursor-pointer items-center gap-[10px] rounded-md border px-[14px] py-3 ${
+                anonymous ? "border-zinc-900 bg-white" : "border-zinc-300 bg-white"
               }`}
             >
               <input
                 type="checkbox"
                 checked={anonymous}
                 onChange={() => setAnonymous((value) => !value)}
-                className="h-[18px] w-[18px] accent-[#111827]"
+                className="h-[18px] w-[18px] accent-internia-primary"
               />
-              <span className="text-[0.92rem] text-[#232323]">ส่งรีวิวแบบไม่ระบุตัวตน</span>
+              <span className="text-[0.92rem] text-zinc-700">ส่งรีวิวแบบไม่ระบุตัวตน</span>
             </label>
           </div>
 
-          <div className="grid">
-            <button type="button" className="min-h-11 rounded-full bg-[#821923] text-[0.92rem] font-semibold text-white">
-              Submit review
-            </button>
-          </div>
+        <div className="grid">
+          <button type="button" className="min-h-11 rounded-full bg-internia-primary text-[0.92rem] font-semibold text-white shadow-crisp transition hover:bg-internia-primaryDark">
+            Submit review
+          </button>
         </div>
-      </form>
-    </main>
+      </div>
+    </form>
   );
 }
 
-function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
+function FormSection({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <section className="grid gap-[14px]">
-      <h2 className="m-0 text-[1.2rem] font-bold">{title}</h2>
+      <h2 className="m-0 flex items-center gap-2 text-[1.2rem] font-bold text-zinc-900">
+        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-internia-primarySoft text-internia-primary">
+          {icon}
+        </span>
+        {title}
+      </h2>
       {children}
     </section>
+  );
+}
+
+function BuildingIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="2" width="16" height="20" rx="1" />
+      <path d="M9 22v-4h6v4M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1" />
+    </svg>
+  );
+}
+
+function BriefcaseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2" y="7" width="20" height="14" rx="2" />
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+    </svg>
+  );
+}
+
+function MessageIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
+function StarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" />
+    </svg>
+  );
+}
+
+function ThumbsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M7 10v11" />
+      <path d="M11 21h7.2a2 2 0 0 0 2-1.7l.7-5A2 2 0 0 0 19 12h-5l1-5.1V6a2 2 0 0 0-2-2l-4 6v11Z" />
+    </svg>
   );
 }
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <label className="grid gap-2">
-      <span className="text-[0.92rem] font-medium leading-[1.4] text-[#232323]">
-        {label} {required ? <span className="text-[#b91c1c]">*</span> : null}
+      <span className="text-[0.92rem] font-medium leading-[1.4] text-zinc-700">
+        {label} {required ? <span className="text-internia-primary">*</span> : null}
       </span>
       {children}
     </label>
@@ -326,10 +428,10 @@ function Field({ label, required, children }: { label: string; required?: boolea
 function TextArea({ label, placeholder }: { label: string; placeholder: string }) {
   return (
     <div className="grid gap-2">
-      <p className="m-0 text-[0.92rem] font-medium leading-[1.4] text-[#232323]">{label}</p>
+      <p className="m-0 text-[0.92rem] font-medium leading-[1.4] text-zinc-700">{label}</p>
       <textarea
         placeholder={placeholder}
-        className="min-h-[188px] w-full resize-y rounded-[3px] border border-[#bdbdbd] bg-white px-4 py-3 text-[0.92rem] text-[#232323] outline-none transition focus:border-[#222] focus:shadow-[0_0_0_1px_#222]"
+        className="min-h-[188px] w-full resize-y rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-[0.92rem] text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-internia-primary/10"
       />
     </div>
   );
@@ -348,61 +450,19 @@ function ToggleBox({
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center gap-[10px] rounded-[4px] border px-[14px] py-3 text-left ${
-        selected ? "border-[#222] bg-white" : "border-[#d5d5d5] bg-white"
+      className={`flex items-center gap-[10px] rounded-md border px-[14px] py-3 text-left ${
+        selected ? "border-zinc-900 bg-white" : "border-zinc-300 bg-white"
       }`}
     >
       <span
-        className={`h-[18px] w-[18px] rounded-full border ${selected ? "border-[5px] border-[#111827]" : "border-[#9ca3af]"}`}
-      />
-      <span className="text-[0.92rem] text-[#232323]">{children}</span>
-    </button>
-  );
-}
-
-function CustomSelect({
-  value,
-  onChange,
-  placeholder,
-  options,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-  options: string[];
-}) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        className={`flex h-[42px] w-full items-center justify-between rounded-[3px] border border-[#bdbdbd] bg-white px-4 text-left text-[0.92rem] outline-none transition focus:border-[#222] focus:shadow-[0_0_0_1px_#222] ${
-          value ? "text-[#232323]" : "text-[#6b7280]"
+        className={`grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border-2 ${
+          selected ? "border-internia-primary" : "border-zinc-400"
         }`}
       >
-        <span>{value || placeholder}</span>
-        <span className="text-base">⌄</span>
-      </button>
-      {open ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-10 overflow-hidden rounded border border-[#cfcfcf] bg-white">
-          {options.map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => {
-                onChange(option);
-                setOpen(false);
-              }}
-              className="block w-full bg-white px-[13px] py-[11px] text-left text-[0.92rem] text-[#232323] hover:bg-[#f5f5f5]"
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-      ) : null}
-    </div>
+        {selected && <span className="h-2 w-2 rounded-full bg-internia-primary" />}
+      </span>
+      <span className="text-[0.92rem] text-zinc-700">{children}</span>
+    </button>
   );
 }
 
@@ -421,19 +481,19 @@ function RecommendBox({
     tone === "like"
       ? selected
         ? "border-[rgba(39,174,96,0.72)] bg-[rgba(39,174,96,0.14)]"
-        : "border-[#d5d5d5] bg-white"
+        : "border-zinc-300 bg-white"
       : selected
         ? "border-[rgba(234,67,53,0.7)] bg-[rgba(234,67,53,0.14)]"
-        : "border-[#d5d5d5] bg-white";
+        : "border-zinc-300 bg-white";
 
   const barColor = tone === "like" ? "#27ae60" : "#ea4335";
   const iconColor = tone === "like" ? "#27ae60" : "#ea4335";
 
   return (
-    <button type="button" onClick={onClick} className={`relative flex items-center gap-[10px] overflow-hidden rounded-[4px] border px-[14px] py-3 text-left ${toneClasses}`}>
+    <button type="button" onClick={onClick} className={`relative flex items-center gap-[10px] overflow-hidden rounded-md border px-[14px] py-3 text-left ${toneClasses}`}>
       <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: selected ? barColor : "transparent" }} />
       <ThumbIcon type={tone} color={iconColor} />
-      <span className="text-[0.92rem] text-[#232323]">{label}</span>
+      <span className="text-[0.92rem] text-zinc-700">{label}</span>
     </button>
   );
 }
@@ -459,4 +519,4 @@ function ThumbIcon({ type, color }: { type: "like" | "dislike"; color: string })
 }
 
 const inputClassName =
-  "h-[42px] w-full rounded-[3px] border border-[#bdbdbd] bg-white px-4 text-[0.92rem] text-[#232323] outline-none transition focus:border-[#222] focus:shadow-[0_0_0_1px_#222]";
+  "h-11 w-full rounded-full border border-zinc-300 bg-white px-4 text-[0.92rem] text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-internia-primary/10";

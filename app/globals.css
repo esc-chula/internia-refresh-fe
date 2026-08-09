@@ -4,7 +4,7 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #111111;
+  --foreground: #18181b;
 }
 
 * {
@@ -22,4 +22,47 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+::selection {
+  background: #7a112833;
+}
+
+input[type="date"] {
+  color-scheme: light;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 4px;
+  border-radius: 9999px;
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  background-color: #f4f4f5;
+}
+
+@keyframes hero-float {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(var(--drift-x, 12px), var(--drift-y, -16px)) rotate(var(--drift-r, 8deg));
+  }
+}
+
+.hero-float {
+  animation: hero-float var(--duration, 9s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-float {
+    animation: none;
+  }
 }

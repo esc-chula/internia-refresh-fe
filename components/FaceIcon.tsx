@@ -1,11 +1,19 @@
 import type { Score } from "@/lib/mock-data";
 
-const fills: Record<Score, string> = {
+export const scoreFills: Record<Score, string> = {
   1: "#ea4335",
   2: "#f2994a",
   3: "#f2c94c",
   4: "#7cb342",
   5: "#27ae60",
+};
+
+export const scoreTextClass: Record<Score, string> = {
+  1: "text-[#ea4335]",
+  2: "text-[#f2994a]",
+  3: "text-[#f2c94c]",
+  4: "text-[#7cb342]",
+  5: "text-[#27ae60]",
 };
 
 export function scoreToFace(score: number): Score {
@@ -19,7 +27,7 @@ export function scoreToFace(score: number): Score {
 export function FaceIcon({ score, className = "h-[18px] w-[18px] shrink-0 rounded-[5px]" }: { score: Score; className?: string }) {
   return (
     <svg className={`block overflow-hidden ${className}`} viewBox="0 0 100 100" aria-hidden="true">
-      <rect width="100" height="100" rx="20" fill={fills[score]} />
+      <rect width="100" height="100" rx="20" fill={scoreFills[score]} />
       {score === 1 && (
         <>
           <path d="M 30,35 Q 35,42 40,38" stroke="#111" strokeWidth="4" strokeLinecap="round" fill="none" />
