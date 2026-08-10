@@ -11,13 +11,10 @@ const labels = [
 ] as const;
 
 export function CompanyCard({ company }: { company: Company }) {
-  const recommendPct = Math.round((company.recommendCount / company.reviewCount) * 100);
-  const recommendFace = scoreToFace(recommendPct / 20);
-
   return (
     <Link
       href={`/company/${company.id}`}
-      className="group grid gap-2 rounded-2xl border border-zinc-200 bg-white p-5 text-zinc-900 no-underline transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lift"
+      className="group grid gap-2 rounded-2xl border border-zinc-200 bg-white p-5 text-zinc-900 no-underline transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lift active:scale-[0.99] active:translate-y-0"
     >
       <div className="grid grid-cols-[54px_minmax(0,1fr)] items-center gap-4">
         <CompanyLogo id={company.id} size={54} />
@@ -34,25 +31,19 @@ export function CompanyCard({ company }: { company: Company }) {
           </div>
         </div>
       </div>
-      <div className="grid gap-4">
-        <div className="mt-1 grid grid-cols-4 border-t border-zinc-100 pt-5">
-          {labels.map(([key, label]) => {
-            const value = company.scores[key];
-            const face = scoreToFace(value);
-            return (
-              <div key={key} className="grid justify-items-center gap-2 text-center">
-                <span className={`text-sm font-normal leading-none ${scoreTextClass[face]}`}>
-                  {value.toFixed(1)}
-                </span>
-                <span className="text-xs leading-none text-zinc-400">{label}</span>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="text-center text-sm leading-snug text-zinc-500">
-          <span className={`font-semibold ${scoreTextClass[recommendFace]}`}>{recommendPct}%</span> แนะนำให้สมัคร
-        </div>
+      <div className="mt-1 grid grid-cols-4 border-t border-zinc-100 pt-5">
+        {labels.map(([key, label]) => {
+          const value = company.scores[key];
+          const face = scoreToFace(value);
+          return (
+            <div key={key} className="grid justify-items-center gap-2 text-center">
+              <span className={`text-sm font-normal leading-none ${scoreTextClass[face]}`}>
+                {value.toFixed(1)}
+              </span>
+              <span className="text-sm leading-none text-zinc-400">{label}</span>
+            </div>
+          );
+        })}
       </div>
     </Link>
   );

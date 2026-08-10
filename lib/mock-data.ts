@@ -6,7 +6,6 @@ export type Company = {
   tag: string;
   rating: number;
   reviewCount: number;
-  recommendCount: number;
   scores: {
     work: number;
     social: number;
@@ -22,7 +21,6 @@ export type Review = {
   department: string;
   intania: string;
   daysAgo: number;
-  recommended: boolean;
   position: string;
   duration: string;
   compensation: string;
@@ -51,7 +49,6 @@ export const companies: Company[] = [
     tag: "Tech",
     rating: 4.6,
     reviewCount: 21,
-    recommendCount: 18,
     scores: { work: 4.6, social: 4.4, mentor: 4.6, experience: 4.8 },
   },
   {
@@ -60,7 +57,6 @@ export const companies: Company[] = [
     tag: "Travel",
     rating: 4.4,
     reviewCount: 16,
-    recommendCount: 13,
     scores: { work: 4.7, social: 4.3, mentor: 4.2, experience: 4.8 },
   },
   {
@@ -69,7 +65,6 @@ export const companies: Company[] = [
     tag: "FinTech",
     rating: 4.3,
     reviewCount: 19,
-    recommendCount: 11,
     scores: { work: 4.2, social: 4.1, mentor: 3.9, experience: 4.5 },
   },
   {
@@ -78,7 +73,6 @@ export const companies: Company[] = [
     tag: "E-com",
     rating: 4.5,
     reviewCount: 18,
-    recommendCount: 14,
     scores: { work: 4.7, social: 4.2, mentor: 4.3, experience: 4.6 },
   },
   {
@@ -87,7 +81,6 @@ export const companies: Company[] = [
     tag: "Manufacturing",
     rating: 4.2,
     reviewCount: 15,
-    recommendCount: 11,
     scores: { work: 4.1, social: 4.3, mentor: 4.2, experience: 4.2 },
   },
   {
@@ -96,7 +89,6 @@ export const companies: Company[] = [
     tag: "Energy",
     rating: 4.1,
     reviewCount: 17,
-    recommendCount: 10,
     scores: { work: 4.0, social: 4.2, mentor: 4.1, experience: 4.2 },
   },
   {
@@ -105,7 +97,6 @@ export const companies: Company[] = [
     tag: "Consulting",
     rating: 4.0,
     reviewCount: 12,
-    recommendCount: 8,
     scores: { work: 4.2, social: 3.9, mentor: 3.8, experience: 4.1 },
   },
   {
@@ -114,7 +105,6 @@ export const companies: Company[] = [
     tag: "Telecom",
     rating: 4.2,
     reviewCount: 14,
-    recommendCount: 10,
     scores: { work: 4.1, social: 4.2, mentor: 4.2, experience: 4.3 },
   },
   {
@@ -123,7 +113,6 @@ export const companies: Company[] = [
     tag: "Manufacturing",
     rating: 4.1,
     reviewCount: 13,
-    recommendCount: 9,
     scores: { work: 4.0, social: 4.1, mentor: 4.0, experience: 4.2 },
   },
   {
@@ -132,7 +121,6 @@ export const companies: Company[] = [
     tag: "Manufacturing",
     rating: 3.9,
     reviewCount: 8,
-    recommendCount: 6,
     scores: { work: 3.8, social: 4.0, mentor: 3.9, experience: 4.0 },
   },
   {
@@ -141,7 +129,6 @@ export const companies: Company[] = [
     tag: "Manufacturing",
     rating: 4.1,
     reviewCount: 7,
-    recommendCount: 6,
     scores: { work: 4.0, social: 4.0, mentor: 4.1, experience: 4.2 },
   },
   {
@@ -150,7 +137,6 @@ export const companies: Company[] = [
     tag: "Energy",
     rating: 4.2,
     reviewCount: 9,
-    recommendCount: 7,
     scores: { work: 4.1, social: 4.3, mentor: 4.2, experience: 4.3 },
   },
   {
@@ -159,7 +145,6 @@ export const companies: Company[] = [
     tag: "Media",
     rating: 4.1,
     reviewCount: 13,
-    recommendCount: 9,
     scores: { work: 4.2, social: 4.0, mentor: 4.0, experience: 4.2 },
   },
   {
@@ -168,7 +153,6 @@ export const companies: Company[] = [
     tag: "Banking",
     rating: 4.3,
     reviewCount: 16,
-    recommendCount: 12,
     scores: { work: 4.2, social: 4.2, mentor: 4.1, experience: 4.4 },
   },
   {
@@ -177,7 +161,6 @@ export const companies: Company[] = [
     tag: "Banking",
     rating: 4.2,
     reviewCount: 15,
-    recommendCount: 11,
     scores: { work: 4.1, social: 4.1, mentor: 4.0, experience: 4.3 },
   },
   {
@@ -186,7 +169,6 @@ export const companies: Company[] = [
     tag: "Energy",
     rating: 4.4,
     reviewCount: 11,
-    recommendCount: 9,
     scores: { work: 4.4, social: 4.2, mentor: 4.3, experience: 4.5 },
   },
   {
@@ -195,7 +177,6 @@ export const companies: Company[] = [
     tag: "Retail",
     rating: 4.0,
     reviewCount: 10,
-    recommendCount: 7,
     scores: { work: 3.9, social: 4.1, mentor: 3.9, experience: 4.0 },
   },
   {
@@ -204,7 +185,6 @@ export const companies: Company[] = [
     tag: "Telecom",
     rating: 4.1,
     reviewCount: 9,
-    recommendCount: 6,
     scores: { work: 4.0, social: 4.1, mentor: 4.0, experience: 4.1 },
   },
   {
@@ -213,7 +193,6 @@ export const companies: Company[] = [
     tag: "Logistics",
     rating: 4.4,
     reviewCount: 14,
-    recommendCount: 12,
     scores: { work: 4.5, social: 4.3, mentor: 4.2, experience: 4.6 },
   },
   {
@@ -222,7 +201,6 @@ export const companies: Company[] = [
     tag: "E-com",
     rating: 4.2,
     reviewCount: 12,
-    recommendCount: 9,
     scores: { work: 4.3, social: 4.0, mentor: 4.0, experience: 4.3 },
   },
   {
@@ -231,7 +209,6 @@ export const companies: Company[] = [
     tag: "Consulting",
     rating: 4.0,
     reviewCount: 10,
-    recommendCount: 7,
     scores: { work: 4.1, social: 3.9, mentor: 3.8, experience: 4.0 },
   },
   {
@@ -240,7 +217,6 @@ export const companies: Company[] = [
     tag: "Consulting",
     rating: 3.9,
     reviewCount: 9,
-    recommendCount: 6,
     scores: { work: 4.0, social: 3.8, mentor: 3.7, experience: 3.9 },
   },
   {
@@ -249,7 +225,6 @@ export const companies: Company[] = [
     tag: "Tech",
     rating: 4.1,
     reviewCount: 8,
-    recommendCount: 6,
     scores: { work: 4.1, social: 4.0, mentor: 4.1, experience: 4.2 },
   },
   {
@@ -258,7 +233,6 @@ export const companies: Company[] = [
     tag: "Tech",
     rating: 4.6,
     reviewCount: 13,
-    recommendCount: 12,
     scores: { work: 4.7, social: 4.5, mentor: 4.6, experience: 4.8 },
   },
   {
@@ -267,7 +241,6 @@ export const companies: Company[] = [
     tag: "AI / Data",
     rating: 4.3,
     reviewCount: 7,
-    recommendCount: 6,
     scores: { work: 4.4, social: 4.1, mentor: 4.3, experience: 4.3 },
   },
   {
@@ -276,7 +249,6 @@ export const companies: Company[] = [
     tag: "Travel",
     rating: 3.9,
     reviewCount: 8,
-    recommendCount: 5,
     scores: { work: 3.8, social: 4.0, mentor: 3.8, experience: 3.9 },
   },
   {
@@ -285,7 +257,6 @@ export const companies: Company[] = [
     tag: "Manufacturing",
     rating: 4.1,
     reviewCount: 7,
-    recommendCount: 5,
     scores: { work: 4.0, social: 4.2, mentor: 4.0, experience: 4.1 },
   },
   {
@@ -294,7 +265,6 @@ export const companies: Company[] = [
     tag: "Real Estate",
     rating: 4.0,
     reviewCount: 9,
-    recommendCount: 6,
     scores: { work: 3.9, social: 4.1, mentor: 4.0, experience: 4.0 },
   },
   {
@@ -303,7 +273,6 @@ export const companies: Company[] = [
     tag: "Retail",
     rating: 3.8,
     reviewCount: 6,
-    recommendCount: 4,
     scores: { work: 3.7, social: 3.9, mentor: 3.7, experience: 3.8 },
   },
   {
@@ -312,7 +281,6 @@ export const companies: Company[] = [
     tag: "Manufacturing",
     rating: 4.3,
     reviewCount: 11,
-    recommendCount: 9,
     scores: { work: 4.3, social: 4.2, mentor: 4.2, experience: 4.4 },
   },
 ];
@@ -325,7 +293,6 @@ export const reviews: Review[] = [
     department: "ภาคคอมพิวเตอร์",
     intania: "107",
     daysAgo: 7,
-    recommended: true,
     position: "Data Engineer Intern",
     duration: "3 เดือน",
     compensation: "500 บาท/วัน",
@@ -353,7 +320,6 @@ export const reviews: Review[] = [
     department: "ภาคไฟฟ้า",
     intania: "106",
     daysAgo: 12,
-    recommended: true,
     position: "Backend Intern",
     duration: "2 เดือน",
     compensation: "18,000 บาท/เดือน",
@@ -376,7 +342,6 @@ export const reviews: Review[] = [
     department: "ภาคคอมพิวเตอร์",
     intania: "108",
     daysAgo: 1,
-    recommended: true,
     position: "Product Design Intern",
     duration: "4 เดือน",
     compensation: "25,000 บาท/เดือน",
@@ -399,7 +364,6 @@ export const reviews: Review[] = [
     department: "ภาคอุตสาหการ",
     intania: "107",
     daysAgo: 14,
-    recommended: true,
     position: "Data Analyst Intern",
     duration: "3 เดือน",
     compensation: "22,000 บาท/เดือน",
@@ -422,7 +386,6 @@ export const reviews: Review[] = [
     department: "ภาคคอมพิวเตอร์",
     intania: "106",
     daysAgo: 3,
-    recommended: true,
     position: "Software Engineer Intern",
     duration: "4 เดือน",
     compensation: "20,000 บาท/เดือน",
@@ -445,7 +408,6 @@ export const reviews: Review[] = [
     department: "ภาคคอมพิวเตอร์",
     intania: "108",
     daysAgo: 5,
-    recommended: true,
     position: "QA Engineer Intern",
     duration: "3 เดือน",
     compensation: "18,000 บาท/เดือน",
@@ -468,7 +430,6 @@ export const reviews: Review[] = [
     department: "ภาคเคมี",
     intania: "105",
     daysAgo: 20,
-    recommended: false,
     position: "Marketing Intern",
     duration: "2 เดือน",
     compensation: "15,000 บาท/เดือน",
@@ -491,7 +452,6 @@ export const reviews: Review[] = [
     department: "ภาคเคมี",
     intania: "107",
     daysAgo: 9,
-    recommended: true,
     position: "Process Engineer Intern",
     duration: "2 เดือน",
     compensation: "15,000 บาท/เดือน",
@@ -514,7 +474,6 @@ export const reviews: Review[] = [
     department: "ภาคเครื่องกล",
     intania: "106",
     daysAgo: 25,
-    recommended: true,
     position: "Mechanical Engineer Intern",
     duration: "2 เดือน",
     compensation: "16,000 บาท/เดือน",
@@ -537,7 +496,6 @@ export const reviews: Review[] = [
     department: "ภาคอุตสาหการ",
     intania: "108",
     daysAgo: 4,
-    recommended: true,
     position: "Audit Intern",
     duration: "3 เดือน",
     compensation: "17,000 บาท/เดือน",
@@ -560,7 +518,6 @@ export const reviews: Review[] = [
     department: "ภาคไฟฟ้า",
     intania: "107",
     daysAgo: 30,
-    recommended: true,
     position: "Network Engineer Intern",
     duration: "3 เดือน",
     compensation: "16,000 บาท/เดือน",
@@ -583,7 +540,6 @@ export const reviews: Review[] = [
     department: "ภาคเครื่องกล",
     intania: "106",
     daysAgo: 18,
-    recommended: true,
     position: "Quality Engineer Intern",
     duration: "2 เดือน",
     compensation: "15,000 บาท/เดือน",
@@ -606,7 +562,6 @@ export const reviews: Review[] = [
     department: "ภาคเคมี",
     intania: "108",
     daysAgo: 22,
-    recommended: true,
     position: "Food Science Intern",
     duration: "2 เดือน",
     compensation: "13,000 บาท/เดือน",
@@ -629,7 +584,6 @@ export const reviews: Review[] = [
     department: "ภาคเคมี",
     intania: "105",
     daysAgo: 35,
-    recommended: true,
     position: "Process Engineer Intern",
     duration: "2 เดือน",
     compensation: "14,000 บาท/เดือน",
@@ -652,7 +606,6 @@ export const reviews: Review[] = [
     department: "ภาคสิ่งแวดล้อม",
     intania: "107",
     daysAgo: 27,
-    recommended: true,
     position: "Sustainability Intern",
     duration: "2 เดือน",
     compensation: "14,000 บาท/เดือน",
@@ -675,7 +628,6 @@ export const reviews: Review[] = [
     department: "ภาคคอมพิวเตอร์",
     intania: "108",
     daysAgo: 40,
-    recommended: false,
     position: "Digital Content Intern",
     duration: "3 เดือน",
     compensation: "13,000 บาท/เดือน",
@@ -698,7 +650,6 @@ export const reviews: Review[] = [
     department: "ภาคอุตสาหการ",
     intania: "107",
     daysAgo: 2,
-    recommended: true,
     position: "Credit Analyst Intern",
     duration: "3 เดือน",
     compensation: "18,000 บาท/เดือน",
@@ -721,7 +672,6 @@ export const reviews: Review[] = [
     department: "ภาคคอมพิวเตอร์",
     intania: "108",
     daysAgo: 6,
-    recommended: true,
     position: "Business Analyst Intern",
     duration: "4 เดือน",
     compensation: "20,000 บาท/เดือน",
@@ -744,7 +694,6 @@ export const reviews: Review[] = [
     department: "ภาคเหมืองแร่",
     intania: "106",
     daysAgo: 33,
-    recommended: true,
     position: "Petroleum Engineer Intern",
     duration: "2 เดือน",
     compensation: "17,000 บาท/เดือน",
@@ -767,7 +716,6 @@ export const reviews: Review[] = [
     department: "ภาคอุตสาหการ",
     intania: "108",
     daysAgo: 16,
-    recommended: false,
     position: "Supply Chain Intern",
     duration: "2 เดือน",
     compensation: "14,000 บาท/เดือน",
@@ -789,7 +737,6 @@ export const reviews: Review[] = [
     department: "ภาคไฟฟ้า",
     intania: "107",
     daysAgo: 24,
-    recommended: true,
     position: "Network Engineer Intern",
     duration: "3 เดือน",
     compensation: "16,000 บาท/เดือน",
@@ -811,7 +758,6 @@ export const reviews: Review[] = [
     department: "ภาคคอมพิวเตอร์",
     intania: "108",
     daysAgo: 8,
-    recommended: true,
     position: "Software Engineer Intern",
     duration: "4 เดือน",
     compensation: "24,000 บาท/เดือน",
@@ -833,7 +779,6 @@ export const reviews: Review[] = [
     department: "ภาคอุตสาหการ",
     intania: "107",
     daysAgo: 19,
-    recommended: true,
     position: "Data Analyst Intern",
     duration: "3 เดือน",
     compensation: "19,000 บาท/เดือน",
@@ -855,7 +800,6 @@ export const reviews: Review[] = [
     department: "ภาคอุตสาหการ",
     intania: "106",
     daysAgo: 29,
-    recommended: true,
     position: "Consulting Intern",
     duration: "2 เดือน",
     compensation: "16,000 บาท/เดือน",
@@ -877,7 +821,6 @@ export const reviews: Review[] = [
     department: "ภาคอุตสาหการ",
     intania: "108",
     daysAgo: 37,
-    recommended: false,
     position: "Audit Intern",
     duration: "3 เดือน",
     compensation: "15,000 บาท/เดือน",
@@ -899,7 +842,6 @@ export const reviews: Review[] = [
     department: "ภาคคอมพิวเตอร์",
     intania: "107",
     daysAgo: 21,
-    recommended: true,
     position: "Cloud Engineer Intern",
     duration: "3 เดือน",
     compensation: "18,000 บาท/เดือน",
@@ -921,7 +863,6 @@ export const reviews: Review[] = [
     department: "ภาคคอมพิวเตอร์",
     intania: "108",
     daysAgo: 0,
-    recommended: true,
     position: "Software Engineer Intern",
     duration: "4 เดือน",
     compensation: "28,000 บาท/เดือน",
@@ -943,7 +884,6 @@ export const reviews: Review[] = [
     department: "ภาคไฟฟ้า",
     intania: "106",
     daysAgo: 31,
-    recommended: true,
     position: "Research Intern",
     duration: "3 เดือน",
     compensation: "15,000 บาท/เดือน",
@@ -965,7 +905,6 @@ export const reviews: Review[] = [
     department: "ภาคเครื่องกล",
     intania: "105",
     daysAgo: 45,
-    recommended: false,
     position: "Ground Services Intern",
     duration: "2 เดือน",
     compensation: "12,000 บาท/เดือน",
@@ -987,7 +926,6 @@ export const reviews: Review[] = [
     department: "ภาคเคมี",
     intania: "107",
     daysAgo: 13,
-    recommended: true,
     position: "Process Engineer Intern",
     duration: "2 เดือน",
     compensation: "14,000 บาท/เดือน",
@@ -1009,7 +947,6 @@ export const reviews: Review[] = [
     department: "ภาคอุตสาหการ",
     intania: "108",
     daysAgo: 17,
-    recommended: true,
     position: "Business Development Intern",
     duration: "2 เดือน",
     compensation: "13,000 บาท/เดือน",
@@ -1031,7 +968,6 @@ export const reviews: Review[] = [
     department: "ภาคอุตสาหการ",
     intania: "106",
     daysAgo: 42,
-    recommended: false,
     position: "Merchandising Intern",
     duration: "2 เดือน",
     compensation: "12,000 บาท/เดือน",
@@ -1053,7 +989,6 @@ export const reviews: Review[] = [
     department: "ภาคอุตสาหการ",
     intania: "107",
     daysAgo: 11,
-    recommended: true,
     position: "Supply Chain Intern",
     duration: "3 เดือน",
     compensation: "18,000 บาท/เดือน",

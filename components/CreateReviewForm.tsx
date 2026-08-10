@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { CustomSelect } from "./CustomSelect";
 import { CompanyLogo } from "./CompanyLogo";
 import { FaceIcon, scoreToFace } from "./FaceIcon";
@@ -35,7 +35,16 @@ const scoreFields = [
 
 const outlineColors = ["rgba(234, 67, 53, 0.7)", "rgba(242, 153, 74, 0.78)", "rgba(242, 201, 76, 0.85)", "rgba(124, 179, 66, 0.8)", "rgba(39, 174, 96, 0.8)"];
 
+const steps = [
+  { title: "ข้อมูลบริษัทและการฝึกงาน" },
+  { title: "เขียนรีวิว" },
+  { title: "ให้คะแนนและส่งรีวิว" },
+] as const;
+
 export function CreateReviewForm() {
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const formTopRef = useRef<HTMLDivElement>(null);
+  const [showMoreDetails, setShowMoreDetails] = useState(false);
   const [company, setCompany] = useState("");
   const [companyFocused, setCompanyFocused] = useState(false);
   const [companyType, setCompanyType] = useState("");
@@ -46,12 +55,12 @@ export function CreateReviewForm() {
   const [yearLimit, setYearLimit] = useState<"yes" | "no" | null>(null);
   const [yearValues, setYearValues] = useState<string[]>([]);
   const [gpaMode, setGpaMode] = useState<"yes" | "no" | null>(null);
-  const [recommend, setRecommend] = useState<"yes" | "no" | null>(null);
   const [anonymous, setAnonymous] = useState(false);
   const [scores, setScores] = useState<Record<string, number | null>>({});
 
   const normalizedCompany = company.trim().toLowerCase();
-  const matchedCompany = knownCompanies.some((item) => item.name.toLowerCase() === normalizedCompany);
+  const matchedCompanyItem = knownCompanies.find((item) => item.name.toLowerCase() === normalizedCompany);
+  const matchedCompany = Boolean(matchedCompanyItem);
   const showCompanyType = normalizedCompany.length > 0 && !matchedCompany;
   const filteredCompanies = useMemo(
     () => knownCompanies.filter((item) => item.name.toLowerCase().includes(normalizedCompany)).slice(0, 5),
@@ -59,26 +68,50 @@ export function CreateReviewForm() {
   );
   const showCompanyList = companyFocused && filteredCompanies.length > 0;
 
+  function goToStep(next: 1 | 2 | 3) {
+    setStep(next);
+    formTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
     <form className="grid justify-items-center gap-5">
-      <div className="grid w-full max-w-[760px] gap-[26px] max-sm:gap-[22px]">
+      <div ref={formTopRef} className="grid w-full max-w-[760px] gap-[26px] max-sm:gap-[22px]">
+          <div className="grid grid-cols-1 gap-2">
+            <div className="flex items-center justify-between gap-2 text-sm font-semibold text-zinc-700">
+              <span>ขั้นตอน {step} จาก {steps.length}</span>
+              <span className="text-zinc-400">{steps[step - 1].title}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {steps.map((item, index) => (
+                <div key={item.title} className={`h-1.5 rounded-full transition-colors duration-300 ${index < step ? "bg-internia-primary" : "bg-zinc-200"}`} />
+              ))}
+            </div>
+          </div>
+
+          <div className={step === 1 ? "animate-fade-in-up grid w-full gap-[26px] max-sm:gap-[22px]" : "hidden"}>
           <FormSection title="ข้อมูลบริษัท" icon={<BuildingIcon />}>
             <Field label="บริษัท" required>
               <div className="relative">
-                <svg
-                  viewBox="0 0 24 24"
-                  width="18"
-                  height="18"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  aria-hidden="true"
-                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400"
-                >
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="m21 21-4.3-4.3" />
-                </svg>
+                {matchedCompanyItem ? (
+                  <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2">
+                    <CompanyLogo id={matchedCompanyItem.id} size={20} />
+                  </div>
+                ) : (
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400"
+                  >
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m21 21-4.3-4.3" />
+                  </svg>
+                )}
                 <input
                   value={company}
                   onChange={(event) => setCompany(event.target.value)}
@@ -88,7 +121,7 @@ export function CreateReviewForm() {
                   className={`${inputClassName} pl-11`}
                 />
                 {showCompanyList && (
-                  <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-10 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-lift">
+                  <div className="animate-dropdown-in absolute left-0 right-0 top-[calc(100%+8px)] z-10 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-lift">
                     {filteredCompanies.map((item) => (
                       <button
                         key={item.id}
@@ -98,7 +131,7 @@ export function CreateReviewForm() {
                           setCompany(item.name);
                           setCompanyFocused(false);
                         }}
-                        className="flex w-full items-center gap-3 border-b border-zinc-100 px-4 py-3 text-left transition last:border-b-0 hover:bg-zinc-50"
+                        className="flex w-full items-center gap-3 border-b border-zinc-100 px-4 py-3 text-left transition last:border-b-0 hover:bg-zinc-100"
                       >
                         <CompanyLogo id={item.id} size={36} />
                         <div className="min-w-0">
@@ -129,7 +162,7 @@ export function CreateReviewForm() {
                       <path d="M12 16V4m0 0 4 4m-4-4-4 4" />
                       <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
                     </svg>
-                    <span className="truncate">{logoFile ? logoFile.name : "อัปโหลดโลโก้บริษัท (ไม่บังคับ)"}</span>
+                    <span className="truncate">{logoFile ? logoFile.name : "อัปโหลดโลโก้บริษัท"}</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -147,7 +180,7 @@ export function CreateReviewForm() {
               <input className={inputClassName} placeholder="ตำแหน่งที่ฝึกงาน" />
             </Field>
 
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <Field label="วันที่เริ่มฝึกงาน" required>
                 <input type="date" className={inputClassName} />
               </Field>
@@ -165,88 +198,126 @@ export function CreateReviewForm() {
               />
             </Field>
 
-            <div className="grid gap-2">
-              <div className="text-sm font-medium leading-[1.4] text-zinc-700">ค่าตอบแทน</div>
-              <div className="grid gap-[10px]">
-                <div className="grid gap-[10px] sm:grid-cols-2">
-                  <ToggleBox selected={salaryMode === "no"} onClick={() => setSalaryMode(salaryMode === "no" ? null : "no")}>
-                    ไม่มี
-                  </ToggleBox>
-                  <ToggleBox selected={salaryMode === "yes"} onClick={() => setSalaryMode(salaryMode === "yes" ? null : "yes")}>
-                    มี
-                  </ToggleBox>
-                </div>
-                {salaryMode === "yes" && (
-                  <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(120px,140px)]">
-                    <input className={inputClassName} inputMode="numeric" placeholder="15000" />
-                    <CustomSelect
-                      value={salaryUnit}
-                      onChange={setSalaryUnit}
-                      placeholder="เลือกหน่วย"
-                      options={salaryUnitOptions}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
+            <div className="grid grid-cols-1 gap-3 rounded-2xl border border-zinc-200 p-4">
+              <button
+                type="button"
+                onClick={() => setShowMoreDetails((value) => !value)}
+                className="flex items-center justify-between gap-2 text-left text-sm font-semibold text-zinc-700"
+              >
+                <span>
+                  รายละเอียดเพิ่มเติม <OptionalTag />
+                </span>
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                  className={`shrink-0 text-zinc-400 transition-transform ${showMoreDetails ? "rotate-180" : ""}`}
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </button>
 
-            <div className="grid gap-2">
-              <div className="text-sm font-medium leading-[1.4] text-zinc-700">ชั้นปีที่เปิดรับ</div>
-              <div className="grid gap-[10px]">
-                <div className="grid gap-[10px] sm:grid-cols-2">
-                  <ToggleBox selected={yearLimit === "no"} onClick={() => setYearLimit(yearLimit === "no" ? null : "no")}>
-                    ไม่จำกัด
-                  </ToggleBox>
-                  <ToggleBox selected={yearLimit === "yes"} onClick={() => setYearLimit(yearLimit === "yes" ? null : "yes")}>
-                    จำกัด
-                  </ToggleBox>
-                </div>
-                {yearLimit === "yes" && (
-                  <div className="grid gap-[10px] sm:grid-cols-2">
-                    {["1", "2", "3", "4"].map((value) => {
-                      const checked = yearValues.includes(value);
-                      return (
-                        <label
-                          key={value}
-                          className={`flex cursor-pointer items-center gap-[10px] rounded-md border px-[14px] py-3 ${
-                            checked ? "border-zinc-900 bg-white" : "border-zinc-300 bg-white"
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() =>
-                              setYearValues((current) =>
-                                checked ? current.filter((item) => item !== value) : [...current, value],
-                              )
-                            }
-                            className="h-[18px] w-[18px] accent-internia-primary"
+              {showMoreDetails && (
+                <div className="animate-fade-in-up grid grid-cols-1 gap-[18px]">
+                  <div className="grid gap-2">
+                    <div className="text-sm font-medium leading-[1.4] text-zinc-700">
+                      ค่าตอบแทน <OptionalTag />
+                    </div>
+                    <div className="grid gap-[10px]">
+                      <div className="grid gap-[10px] sm:grid-cols-2">
+                        <ToggleBox selected={salaryMode === "no"} onClick={() => setSalaryMode(salaryMode === "no" ? null : "no")}>
+                          ไม่มี
+                        </ToggleBox>
+                        <ToggleBox selected={salaryMode === "yes"} onClick={() => setSalaryMode(salaryMode === "yes" ? null : "yes")}>
+                          มี
+                        </ToggleBox>
+                      </div>
+                      {salaryMode === "yes" && (
+                        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(120px,140px)]">
+                          <input className={inputClassName} inputMode="numeric" placeholder="15000" />
+                          <CustomSelect
+                            value={salaryUnit}
+                            onChange={setSalaryUnit}
+                            placeholder="เลือกหน่วย"
+                            options={salaryUnitOptions}
                           />
-                          <span className="text-sm text-zinc-700">ชั้นปีที่ {value}</span>
-                        </label>
-                      );
-                    })}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
 
-            <div className="grid gap-2">
-              <div className="text-sm font-medium leading-[1.4] text-zinc-700">เกรดเฉลี่ยขั้นต่ำ</div>
-              <div className="grid gap-[10px]">
-                <div className="grid gap-[10px] sm:grid-cols-2">
-                  <ToggleBox selected={gpaMode === "no"} onClick={() => setGpaMode(gpaMode === "no" ? null : "no")}>
-                    ไม่มี
-                  </ToggleBox>
-                  <ToggleBox selected={gpaMode === "yes"} onClick={() => setGpaMode(gpaMode === "yes" ? null : "yes")}>
-                    มี
-                  </ToggleBox>
+                  <div className="grid gap-2">
+                    <div className="text-sm font-medium leading-[1.4] text-zinc-700">
+                      ชั้นปีที่เปิดรับ <OptionalTag />
+                    </div>
+                    <div className="grid gap-[10px]">
+                      <div className="grid gap-[10px] sm:grid-cols-2">
+                        <ToggleBox selected={yearLimit === "no"} onClick={() => setYearLimit(yearLimit === "no" ? null : "no")}>
+                          ไม่จำกัด
+                        </ToggleBox>
+                        <ToggleBox selected={yearLimit === "yes"} onClick={() => setYearLimit(yearLimit === "yes" ? null : "yes")}>
+                          จำกัด
+                        </ToggleBox>
+                      </div>
+                      {yearLimit === "yes" && (
+                        <div className="grid gap-[10px] sm:grid-cols-2">
+                          {["1", "2", "3", "4"].map((value) => {
+                            const checked = yearValues.includes(value);
+                            return (
+                              <label
+                                key={value}
+                                className={`flex cursor-pointer items-center gap-[10px] rounded-md border px-[14px] py-3 ${
+                                  checked ? "border-zinc-900 bg-white" : "border-zinc-300 bg-white"
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() =>
+                                    setYearValues((current) =>
+                                      checked ? current.filter((item) => item !== value) : [...current, value],
+                                    )
+                                  }
+                                  className="h-[18px] w-[18px] accent-internia-primary"
+                                />
+                                <span className="text-sm text-zinc-700">ชั้นปีที่ {value}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <div className="text-sm font-medium leading-[1.4] text-zinc-700">
+                      เกรดเฉลี่ยขั้นต่ำ <OptionalTag />
+                    </div>
+                    <div className="grid gap-[10px]">
+                      <div className="grid gap-[10px] sm:grid-cols-2">
+                        <ToggleBox selected={gpaMode === "no"} onClick={() => setGpaMode(gpaMode === "no" ? null : "no")}>
+                          ไม่มี
+                        </ToggleBox>
+                        <ToggleBox selected={gpaMode === "yes"} onClick={() => setGpaMode(gpaMode === "yes" ? null : "yes")}>
+                          มี
+                        </ToggleBox>
+                      </div>
+                      {gpaMode === "yes" && <input className={inputClassName} inputMode="decimal" placeholder="เช่น 2.75" />}
+                    </div>
+                  </div>
                 </div>
-                {gpaMode === "yes" && <input className={inputClassName} inputMode="decimal" placeholder="เช่น 2.75" />}
-              </div>
+              )}
             </div>
           </FormSection>
+          </div>
 
+          <div className={step === 2 ? "animate-fade-in-up grid w-full gap-[26px] max-sm:gap-[22px]" : "hidden"}>
           <FormSection title="รีวิว" icon={<MessageIcon />}>
             <TextArea label="ขั้นตอนการสมัคร" placeholder="สมัครผ่านช่องทางไหน มีกี่รอบ ใช้เวลานานไหม ต้องเตรียมอะไรเป็นพิเศษ" />
             <TextArea label="งานที่ได้รับ" placeholder="หน้าที่ที่รับผิดชอบ โปรเจคที่ได้ทำ ความรู้หรือเครื่องมือที่ใช้ เนื้องานตรงกับตำแหน่งที่สมัครไหม" />
@@ -254,7 +325,9 @@ export function CreateReviewForm() {
             <TextArea label="สวัสดิการและการเดินทาง" placeholder="สวัสดิการที่ได้รับ สิ่งอำนวยความสะดวก การเดินทางไปทำงาน" />
             <TextArea label="สิ่งที่อยากบอกต่อ" placeholder="ชอบอะไร ไม่ชอบอะไร ได้เรียนรู้อะไร และอยากแนะนำคนที่สนใจว่าอะไร" />
           </FormSection>
+          </div>
 
+          <div className={step === 3 ? "animate-fade-in-up grid w-full gap-[26px] max-sm:gap-[22px]" : "hidden"}>
           <section className="grid gap-[14px]">
             <div className="grid gap-[1.4rem]">
               <h2 className="m-0 flex items-center gap-2 text-[1.2rem] font-bold text-zinc-900">
@@ -270,7 +343,7 @@ export function CreateReviewForm() {
                   </div>
                   <div className="grid gap-3">
                     <div className="grid items-center gap-3 max-sm:grid-cols-[minmax(72px,1fr)_auto_minmax(72px,1fr)] sm:grid-cols-[minmax(92px,1fr)_auto_minmax(92px,1fr)]">
-                      <div className="text-right text-xs leading-[1.4] text-zinc-500 max-sm:text-xs max-sm:leading-[1.35]">{low}</div>
+                      <div className="text-right text-sm leading-[1.4] text-zinc-500 max-sm:text-sm max-sm:leading-[1.35]">{low}</div>
                       <div className="grid grid-cols-5 justify-center gap-[0.3rem] max-sm:gap-[0.24rem]">
                         {[1, 2, 3, 4, 5].map((score) => {
                           const selected = scores[key] === score;
@@ -298,30 +371,13 @@ export function CreateReviewForm() {
                           );
                         })}
                       </div>
-                      <div className="text-left text-xs leading-[1.4] text-zinc-500 max-sm:text-xs max-sm:leading-[1.35]">{high}</div>
+                      <div className="text-left text-sm leading-[1.4] text-zinc-500 max-sm:text-sm max-sm:leading-[1.35]">{high}</div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           </section>
-
-          <FormSection title="คุณแนะนำให้คนอื่นมาสมัครหรือไม่?" icon={<ThumbsIcon />}>
-            <div className="grid gap-[10px] sm:grid-cols-2">
-              <RecommendBox
-                selected={recommend === "yes"}
-                tone="like"
-                label="แนะนำ"
-                onClick={() => setRecommend(recommend === "yes" ? null : "yes")}
-              />
-              <RecommendBox
-                selected={recommend === "no"}
-                tone="dislike"
-                label="ไม่แนะนำ"
-                onClick={() => setRecommend(recommend === "no" ? null : "no")}
-              />
-            </div>
-          </FormSection>
 
           <div className="grid gap-2">
             <label
@@ -338,12 +394,51 @@ export function CreateReviewForm() {
               <span className="text-sm text-zinc-700">ส่งรีวิวแบบไม่ระบุตัวตน</span>
             </label>
           </div>
+          </div>
 
-        <div className="grid">
-          <button type="button" className="min-h-11 rounded-full bg-internia-primary text-sm font-semibold text-white shadow-crisp transition hover:bg-internia-primaryDark">
-            Submit review
-          </button>
-        </div>
+          {step === 1 && (
+            <button
+              type="button"
+              onClick={() => goToStep(2)}
+              className="min-h-11 rounded-full bg-internia-primary text-sm font-semibold text-white shadow-crisp transition active:scale-[0.98] hover:bg-internia-primaryDark"
+            >
+              ถัดไป
+            </button>
+          )}
+
+          {step === 2 && (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => goToStep(1)}
+                className="min-h-11 rounded-full border border-zinc-300 bg-white text-sm font-semibold text-zinc-700 transition active:scale-[0.98] hover:border-zinc-400"
+              >
+                ย้อนกลับ
+              </button>
+              <button
+                type="button"
+                onClick={() => goToStep(3)}
+                className="min-h-11 rounded-full bg-internia-primary text-sm font-semibold text-white shadow-crisp transition active:scale-[0.98] hover:bg-internia-primaryDark"
+              >
+                ถัดไป
+              </button>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => goToStep(2)}
+                className="min-h-11 rounded-full border border-zinc-300 bg-white text-sm font-semibold text-zinc-700 transition active:scale-[0.98] hover:border-zinc-400"
+              >
+                ย้อนกลับ
+              </button>
+              <button type="button" className="min-h-11 rounded-full bg-internia-primary text-sm font-semibold text-white shadow-crisp transition active:scale-[0.98] hover:bg-internia-primaryDark">
+                ยืนยันส่งรีวิว
+              </button>
+            </div>
+          )}
       </div>
     </form>
   );
@@ -405,20 +500,15 @@ function StarIcon() {
   );
 }
 
-function ThumbsIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M7 10v11" />
-      <path d="M11 21h7.2a2 2 0 0 0 2-1.7l.7-5A2 2 0 0 0 19 12h-5l1-5.1V6a2 2 0 0 0-2-2l-4 6v11Z" />
-    </svg>
-  );
+function OptionalTag() {
+  return <span className="font-normal text-zinc-400">(ไม่บังคับ)</span>;
 }
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
-    <label className="grid gap-2">
+    <label className="grid grid-cols-1 gap-2">
       <span className="text-sm font-medium leading-[1.4] text-zinc-700">
-        {label} {required ? <span className="text-internia-primary">*</span> : null}
+        {label} {required ? <span className="text-internia-primary">*</span> : <OptionalTag />}
       </span>
       {children}
     </label>
@@ -428,7 +518,9 @@ function Field({ label, required, children }: { label: string; required?: boolea
 function TextArea({ label, placeholder }: { label: string; placeholder: string }) {
   return (
     <div className="grid gap-2">
-      <p className="m-0 text-sm font-medium leading-[1.4] text-zinc-700">{label}</p>
+      <p className="m-0 text-sm font-medium leading-[1.4] text-zinc-700">
+        {label} <OptionalTag />
+      </p>
       <textarea
         placeholder={placeholder}
         className="min-h-[188px] w-full resize-y rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-internia-primary/10"
@@ -463,58 +555,6 @@ function ToggleBox({
       </span>
       <span className="text-sm text-zinc-700">{children}</span>
     </button>
-  );
-}
-
-function RecommendBox({
-  selected,
-  tone,
-  label,
-  onClick,
-}: {
-  selected: boolean;
-  tone: "like" | "dislike";
-  label: string;
-  onClick: () => void;
-}) {
-  const toneClasses =
-    tone === "like"
-      ? selected
-        ? "border-[rgba(39,174,96,0.72)] bg-[rgba(39,174,96,0.14)]"
-        : "border-zinc-300 bg-white"
-      : selected
-        ? "border-[rgba(234,67,53,0.7)] bg-[rgba(234,67,53,0.14)]"
-        : "border-zinc-300 bg-white";
-
-  const barColor = tone === "like" ? "#27ae60" : "#ea4335";
-  const iconColor = tone === "like" ? "#27ae60" : "#ea4335";
-
-  return (
-    <button type="button" onClick={onClick} className={`relative flex items-center gap-[10px] overflow-hidden rounded-md border px-[14px] py-3 text-left ${toneClasses}`}>
-      <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: selected ? barColor : "transparent" }} />
-      <ThumbIcon type={tone} color={iconColor} />
-      <span className="text-sm text-zinc-700">{label}</span>
-    </button>
-  );
-}
-
-function ThumbIcon({ type, color }: { type: "like" | "dislike"; color: string }) {
-  if (type === "like") {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-[18px] w-[18px] shrink-0">
-        <path d="M7 10v11" />
-        <path d="M11 21h7.2a2 2 0 0 0 2-1.7l.7-5A2 2 0 0 0 19 12H14l1-5.1V6a2 2 0 0 0-2-2l-4 6v11Z" />
-        <path d="M7 21H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h3" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-[18px] w-[18px] shrink-0">
-      <path d="M17 14V3" />
-      <path d="M13 3H5.8a2 2 0 0 0-2 1.7l-.7 5A2 2 0 0 0 5 12h5l-1 5.1v.9a2 2 0 0 0 2 2l4-6V3Z" />
-      <path d="M17 3h3a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-3" />
-    </svg>
   );
 }
 
