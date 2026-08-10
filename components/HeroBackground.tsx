@@ -48,7 +48,7 @@ export function HeroBackground() {
         return (
           <div
             key={index}
-            className={`hero-float absolute text-[#DEE8EF] ${piece.hideOnMobile ? "hidden sm:block" : ""}`}
+            className={`hero-float absolute text-[#ccd8e1] ${piece.hideOnMobile ? "hidden sm:block" : ""}`}
             style={
               {
                 top: piece.top,
