@@ -15,6 +15,9 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-inter)", "var(--font-noto-thai)", "sans-serif"],
       },
+      fontSize: {
+        md: ["1rem", { lineHeight: "1.5rem" }],
+      },
       boxShadow: {
         card: "0 1px 2px 0 rgb(0 0 0 / 0.04)",
         lift: "0 8px 24px -8px rgb(0 0 0 / 0.12), 0 2px 6px -2px rgb(0 0 0 / 0.06)",
