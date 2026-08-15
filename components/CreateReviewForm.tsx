@@ -115,6 +115,7 @@ export function CreateReviewForm({
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     if (mode !== "create") return;
@@ -139,6 +140,16 @@ export function CreateReviewForm({
   }
 
   async function handleSubmit() {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    try {
+      await doSubmit();
+    } finally {
+      submittingRef.current = false;
+    }
+  }
+
+  async function doSubmit() {
     setSubmitError(null);
 
     if (mode === "create" && !company.trim()) {
