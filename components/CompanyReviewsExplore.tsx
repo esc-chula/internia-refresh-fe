@@ -7,7 +7,7 @@ import { CustomSelect } from "./CustomSelect";
 import { MultiSelect } from "./MultiSelect";
 import { SearchBox } from "./SearchBox";
 import { ReviewCard } from "./ReviewCard";
-import { Review } from "@/lib/mock-data";
+import type { Review } from "@/lib/api/types";
 
 type Sort = "newest" | "experience";
 type Direction = "asc" | "desc";
@@ -32,20 +32,17 @@ const gpaFilterOptions = [
   { value: "3.00", label: "เกรดเฉลี่ย 3.00 ขึ้นไป" },
 ];
 
-function matchesOpenYear(openYears: string, years: string[]) {
+function matchesYearFilter(review: Review, years: string[]) {
   if (years.length === 0) return true;
-  if (openYears === "ทุกชั้นปี") return true;
-  const nums = (openYears.match(/\d+/g) ?? []).map(Number);
-  if (nums.length === 0) return false;
-  const min = Math.min(...nums);
-  const max = Math.max(...nums);
-  return years.some((year) => Number(year) >= min && Number(year) <= max);
+  if (review.hasYearLimit !== true) return true;
+  const accepted = review.acceptedYears ?? [];
+  return years.some((year) => accepted.includes(Number(year)));
 }
 
-function matchesMinGpa(minGpa: number | null, gpas: string[]) {
+function matchesMinGpaFilter(review: Review, gpas: string[]) {
   if (gpas.length === 0) return true;
-  if (minGpa == null) return true;
-  return gpas.some((gpa) => minGpa <= Number(gpa));
+  if (review.hasMinGpa !== true || review.minGpa == null) return true;
+  return gpas.some((gpa) => review.minGpa! <= Number(gpa));
 }
 
 export function CompanyReviewsExplore({ reviews }: { reviews: Review[] }) {
@@ -53,31 +50,26 @@ export function CompanyReviewsExplore({ reviews }: { reviews: Review[] }) {
   const [query, setQuery] = useState(searchParams.get("position") ?? "");
   const [draft, setDraft] = useState(searchParams.get("position") ?? "");
   const [department, setDepartment] = useState<string[]>([]);
-  const [intania, setIntania] = useState<string[]>([]);
   const [yearFilter, setYearFilter] = useState<string[]>([]);
   const [gpaFilter, setGpaFilter] = useState<string[]>([]);
   const [sort, setSort] = useState<Sort>("newest");
   const [direction, setDirection] = useState<Direction>("desc");
 
   const departmentOptions = useMemo(() => {
-    const unique = Array.from(new Set(reviews.map((review) => review.department))).sort();
+    const unique = Array.from(
+      new Set(reviews.map((review) => review.reviewer.department).filter((value): value is string => Boolean(value))),
+    ).sort();
     return unique.map((option) => ({ value: option, label: option }));
-  }, [reviews]);
-
-  const intaniaOptions = useMemo(() => {
-    const unique = Array.from(new Set(reviews.map((review) => review.intania))).sort();
-    return unique.map((option) => ({ value: option, label: `รุ่น ${option}` }));
   }, [reviews]);
 
   const dir = direction === "desc" ? 1 : -1;
 
   const searchIndex = useMemo(() => new Fuse(reviews, { keys: ["position"], threshold: 0.35 }), [reviews]);
 
-  const hasActiveFilters = department.length > 0 || intania.length > 0 || yearFilter.length > 0 || gpaFilter.length > 0;
+  const hasActiveFilters = department.length > 0 || yearFilter.length > 0 || gpaFilter.length > 0;
 
   function clearFilters() {
     setDepartment([]);
-    setIntania([]);
     setYearFilter([]);
     setGpaFilter([]);
   }
@@ -86,18 +78,17 @@ export function CompanyReviewsExplore({ reviews }: { reviews: Review[] }) {
     const q = query.trim();
     const base = q ? searchIndex.search(q).map((result) => result.item) : reviews;
     const list = base.filter((review) => {
-      if (department.length > 0 && !department.includes(review.department)) return false;
-      if (intania.length > 0 && !intania.includes(review.intania)) return false;
-      if (!matchesOpenYear(review.openYears, yearFilter)) return false;
-      if (!matchesMinGpa(review.minGpa, gpaFilter)) return false;
+      if (department.length > 0 && (!review.reviewer.department || !department.includes(review.reviewer.department))) return false;
+      if (!matchesYearFilter(review, yearFilter)) return false;
+      if (!matchesMinGpaFilter(review, gpaFilter)) return false;
       return true;
     });
 
     return [...list].sort((a, b) => {
-      if (sort === "newest") return (b.daysAgo - a.daysAgo) * -dir;
-      return (b.scores.experience - a.scores.experience) * dir;
+      if (sort === "newest") return (new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) * dir;
+      return (b.experienceScore - a.experienceScore) * dir;
     });
-  }, [reviews, searchIndex, query, department, intania, yearFilter, gpaFilter, sort, dir]);
+  }, [reviews, searchIndex, query, department, yearFilter, gpaFilter, sort, dir]);
 
   return (
     <section className="grid grid-cols-1 gap-3.5">
@@ -122,7 +113,6 @@ export function CompanyReviewsExplore({ reviews }: { reviews: Review[] }) {
 
         <div className="flex flex-wrap items-center gap-2.5">
           <MultiSelect values={department} onChange={setDepartment} options={departmentOptions} placeholder="ทุกภาควิชา" />
-          <MultiSelect values={intania} onChange={setIntania} options={intaniaOptions} placeholder="ทุกรุ่น" />
           <MultiSelect values={yearFilter} onChange={setYearFilter} options={yearFilterOptions} placeholder="ชั้นปีที่เปิดรับ" />
           <MultiSelect values={gpaFilter} onChange={setGpaFilter} options={gpaFilterOptions} placeholder="เกรดเฉลี่ยขั้นต่ำ" />
 

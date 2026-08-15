@@ -1,4 +1,4 @@
-import type { Score } from "@/lib/mock-data";
+export type Score = 1 | 2 | 3 | 4 | 5;
 
 export const scoreFills: Record<Score, string> = {
   1: "#ea4335",

@@ -1,10 +1,16 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { CustomSelect } from "./CustomSelect";
 import { CompanyLogo } from "./CompanyLogo";
 import { FaceIcon, scoreToFace } from "./FaceIcon";
-import { companies as knownCompanies } from "@/lib/mock-data";
+import { createCompany, listCompanies } from "@/lib/api/companies";
+import { createReview, updateReview } from "@/lib/api/reviews";
+import { ApiError } from "@/lib/api/types";
+import type { Company, Review, ReviewPayload, WorkMode } from "@/lib/api/types";
+
+const FETCH_ALL_LIMIT = 300;
 
 const companyTypes = [
   "Banking, Finance & Investment",
@@ -41,22 +47,81 @@ const steps = [
   { title: "ให้คะแนนและส่งรีวิว" },
 ] as const;
 
-export function CreateReviewForm() {
+export function CreateReviewForm({
+  mode = "create",
+  reviewId,
+  initialReview,
+  fixedCompanySlug,
+  fixedCompanyName,
+}: {
+  mode?: "create" | "edit";
+  reviewId?: string;
+  initialReview?: Review;
+  fixedCompanySlug?: string;
+  fixedCompanyName?: string;
+} = {}) {
+  const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const formTopRef = useRef<HTMLDivElement>(null);
-  const [showMoreDetails, setShowMoreDetails] = useState(false);
+  const [showMoreDetails, setShowMoreDetails] = useState(mode === "edit");
   const [company, setCompany] = useState("");
   const [companyFocused, setCompanyFocused] = useState(false);
   const [companyType, setCompanyType] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [workMode, setWorkMode] = useState("");
-  const [salaryMode, setSalaryMode] = useState<"yes" | "no" | null>(null);
-  const [salaryUnit, setSalaryUnit] = useState("");
-  const [yearLimit, setYearLimit] = useState<"yes" | "no" | null>(null);
-  const [yearValues, setYearValues] = useState<string[]>([]);
-  const [gpaMode, setGpaMode] = useState<"yes" | "no" | null>(null);
-  const [anonymous, setAnonymous] = useState(false);
-  const [scores, setScores] = useState<Record<string, number | null>>({});
+  const [knownCompanies, setKnownCompanies] = useState<Company[]>([]);
+
+  const [position, setPosition] = useState(initialReview?.position ?? "");
+  const [startDate, setStartDate] = useState(initialReview?.startDate ?? "");
+  const [endDate, setEndDate] = useState(initialReview?.endDate ?? "");
+  const [workMode, setWorkMode] = useState<string>(initialReview?.workMode ?? "");
+
+  const [salaryMode, setSalaryMode] = useState<"yes" | "no" | null>(
+    initialReview?.hasCompensation === true ? "yes" : initialReview?.hasCompensation === false ? "no" : null,
+  );
+  const [salaryAmount, setSalaryAmount] = useState(initialReview?.compensationAmount != null ? String(initialReview.compensationAmount) : "");
+  const [salaryUnit, setSalaryUnit] = useState(initialReview?.compensationUnit ?? "");
+
+  const [yearLimit, setYearLimit] = useState<"yes" | "no" | null>(
+    initialReview?.hasYearLimit === true ? "yes" : initialReview?.hasYearLimit === false ? "no" : null,
+  );
+  const [yearValues, setYearValues] = useState<string[]>(initialReview?.acceptedYears?.map(String) ?? []);
+
+  const [gpaMode, setGpaMode] = useState<"yes" | "no" | null>(
+    initialReview?.hasMinGpa === true ? "yes" : initialReview?.hasMinGpa === false ? "no" : null,
+  );
+  const [minGpaValue, setMinGpaValue] = useState(initialReview?.minGpa != null ? String(initialReview.minGpa) : "");
+
+  const [applicationText, setApplicationText] = useState(initialReview?.applicationSection ?? "");
+  const [workText, setWorkText] = useState(initialReview?.workSection ?? "");
+  const [atmosphereText, setAtmosphereText] = useState(initialReview?.atmosphereSection ?? "");
+  const [welfareText, setWelfareText] = useState(initialReview?.welfareSection ?? "");
+  const [adviceText, setAdviceText] = useState(initialReview?.adviceSection ?? "");
+
+  const [recommended, setRecommended] = useState<"yes" | "no" | null>(
+    initialReview ? (initialReview.recommended ? "yes" : "no") : null,
+  );
+  const [anonymous, setAnonymous] = useState(initialReview?.anonymous ?? false);
+  const [scores, setScores] = useState<Record<string, number | null>>(
+    initialReview
+      ? {
+          work: initialReview.workScore,
+          social: initialReview.socialScore,
+          mentor: initialReview.mentorScore,
+          experience: initialReview.experienceScore,
+          overall: initialReview.overallScore,
+        }
+      : {},
+  );
+
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (mode !== "create") return;
+    listCompanies({ limit: FETCH_ALL_LIMIT })
+      .then((res) => setKnownCompanies(res.companies))
+      .catch(() => {});
+  }, [mode]);
 
   const normalizedCompany = company.trim().toLowerCase();
   const matchedCompanyItem = knownCompanies.find((item) => item.name.toLowerCase() === normalizedCompany);
@@ -64,7 +129,7 @@ export function CreateReviewForm() {
   const showCompanyType = normalizedCompany.length > 0 && !matchedCompany;
   const filteredCompanies = useMemo(
     () => knownCompanies.filter((item) => item.name.toLowerCase().includes(normalizedCompany)).slice(0, 5),
-    [normalizedCompany],
+    [normalizedCompany, knownCompanies],
   );
   const showCompanyList = companyFocused && filteredCompanies.length > 0;
 
@@ -73,8 +138,90 @@ export function CreateReviewForm() {
     formTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  async function handleSubmit() {
+    setSubmitError(null);
+
+    if (mode === "create" && !company.trim()) {
+      setSubmitError("กรุณากรอกชื่อบริษัท");
+      return;
+    }
+    if (mode === "create" && showCompanyType && !companyType) {
+      setSubmitError("กรุณาเลือกประเภทบริษัท");
+      return;
+    }
+    if (!position.trim()) {
+      setSubmitError("กรุณากรอกตำแหน่งที่ฝึกงาน");
+      return;
+    }
+    if (!startDate || !endDate) {
+      setSubmitError("กรุณากรอกวันที่เริ่มและสิ้นสุดการฝึกงาน");
+      return;
+    }
+    if (!workMode) {
+      setSubmitError("กรุณาเลือกรูปแบบการทำงาน");
+      return;
+    }
+    const requiredScoreKeys = ["work", "social", "mentor", "experience", "overall"];
+    if (requiredScoreKeys.some((key) => !scores[key])) {
+      setSubmitError("กรุณาให้คะแนนครบทุกด้าน");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const payload: ReviewPayload = {
+        position: position.trim(),
+        startDate,
+        endDate,
+        workMode: workMode as WorkMode,
+        hasCompensation: salaryMode === "yes",
+        ...(salaryMode === "yes" ? { compensationAmount: Number(salaryAmount), compensationUnit: salaryUnit } : {}),
+        hasYearLimit: yearLimit === "yes",
+        ...(yearLimit === "yes" ? { acceptedYears: yearValues.map(Number) } : {}),
+        hasMinGpa: gpaMode === "yes",
+        ...(gpaMode === "yes" ? { minGpa: Number(minGpaValue) } : {}),
+        ...(applicationText.trim() ? { applicationSection: applicationText.trim() } : {}),
+        ...(workText.trim() ? { workSection: workText.trim() } : {}),
+        ...(atmosphereText.trim() ? { atmosphereSection: atmosphereText.trim() } : {}),
+        ...(welfareText.trim() ? { welfareSection: welfareText.trim() } : {}),
+        ...(adviceText.trim() ? { adviceSection: adviceText.trim() } : {}),
+        workScore: scores.work!,
+        socialScore: scores.social!,
+        mentorScore: scores.mentor!,
+        experienceScore: scores.experience!,
+        overallScore: scores.overall!,
+        recommended: recommended === "yes",
+        anonymous,
+      };
+
+      if (mode === "edit" && reviewId && fixedCompanySlug) {
+        await updateReview(reviewId, payload);
+        router.push(`/company/${fixedCompanySlug}`);
+        return;
+      }
+
+      // New-company sub-flow (PLAN.md decision #4): create the company
+      // first if the typed name didn't match an existing one, then use
+      // its slug for the review. If review creation fails afterward, the
+      // company is left created (harmless) — retrying the review submit
+      // will now match it by name.
+      let slug = matchedCompanyItem?.slug;
+      if (!slug) {
+        const created = await createCompany({ name: company.trim(), category: companyType, logo: logoFile });
+        slug = created.slug;
+      }
+
+      await createReview(slug, payload);
+      router.push(`/company/${slug}`);
+    } catch (err) {
+      setSubmitError(err instanceof ApiError ? err.message : "ส่งรีวิวไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
-    <form className="grid justify-items-center gap-5">
+    <form className="grid justify-items-center gap-5" onSubmit={(event) => event.preventDefault()}>
       <div ref={formTopRef} className="grid w-full max-w-[760px] gap-[26px] max-sm:gap-[22px]">
           <div className="grid grid-cols-1 gap-2">
             <div className="flex items-center justify-between gap-2 text-sm font-semibold text-zinc-700">
@@ -89,12 +236,21 @@ export function CreateReviewForm() {
           </div>
 
           <div className={step === 1 ? "animate-fade-in-up grid w-full gap-[26px] max-sm:gap-[22px]" : "hidden"}>
+          {mode === "edit" ? (
+            <FormSection title="ข้อมูลบริษัท" icon={<BuildingIcon />}>
+              <Field label="บริษัท">
+                <div className="flex h-11 items-center gap-2.5 rounded-full border border-zinc-200 bg-zinc-50 px-4 text-sm text-zinc-700">
+                  {fixedCompanyName}
+                </div>
+              </Field>
+            </FormSection>
+          ) : (
           <FormSection title="ข้อมูลบริษัท" icon={<BuildingIcon />}>
             <Field label="บริษัท" required>
               <div className="relative">
                 {matchedCompanyItem ? (
                   <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2">
-                    <CompanyLogo id={matchedCompanyItem.id} size={20} />
+                    <CompanyLogo logoUrl={matchedCompanyItem.logoUrl} alt={matchedCompanyItem.name} size={20} />
                   </div>
                 ) : (
                   <svg
@@ -133,10 +289,10 @@ export function CreateReviewForm() {
                         }}
                         className="flex w-full items-center gap-3 border-b border-zinc-100 px-4 py-3 text-left transition last:border-b-0 hover:bg-zinc-100"
                       >
-                        <CompanyLogo id={item.id} size={36} />
+                        <CompanyLogo logoUrl={item.logoUrl} alt={item.name} size={36} />
                         <div className="min-w-0">
                           <div className="truncate text-sm font-semibold text-zinc-900">{item.name}</div>
-                          <div className="truncate text-sm text-zinc-500">{item.tag}</div>
+                          <div className="truncate text-sm text-zinc-500">{item.category}</div>
                         </div>
                       </button>
                     ))}
@@ -174,18 +330,34 @@ export function CreateReviewForm() {
               </>
             )}
           </FormSection>
+          )}
 
           <FormSection title="ข้อมูลการฝึกงาน" icon={<BriefcaseIcon />}>
             <Field label="ตำแหน่งที่ฝึกงาน" required>
-              <input className={inputClassName} placeholder="ตำแหน่งที่ฝึกงาน" />
+              <input
+                value={position}
+                onChange={(event) => setPosition(event.target.value)}
+                className={inputClassName}
+                placeholder="ตำแหน่งที่ฝึกงาน"
+              />
             </Field>
 
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <Field label="วันที่เริ่มฝึกงาน" required>
-                <input type="date" className={inputClassName} />
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(event) => setStartDate(event.target.value)}
+                  className={inputClassName}
+                />
               </Field>
               <Field label="วันที่สิ้นสุด" required>
-                <input type="date" className={inputClassName} />
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(event) => setEndDate(event.target.value)}
+                  className={inputClassName}
+                />
               </Field>
             </div>
 
@@ -240,7 +412,13 @@ export function CreateReviewForm() {
                       </div>
                       {salaryMode === "yes" && (
                         <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(120px,140px)]">
-                          <input className={inputClassName} inputMode="numeric" placeholder="15000" />
+                          <input
+                            value={salaryAmount}
+                            onChange={(event) => setSalaryAmount(event.target.value)}
+                            className={inputClassName}
+                            inputMode="numeric"
+                            placeholder="15000"
+                          />
                           <CustomSelect
                             value={salaryUnit}
                             onChange={setSalaryUnit}
@@ -308,7 +486,15 @@ export function CreateReviewForm() {
                           มี
                         </ToggleBox>
                       </div>
-                      {gpaMode === "yes" && <input className={inputClassName} inputMode="decimal" placeholder="เช่น 2.75" />}
+                      {gpaMode === "yes" && (
+                        <input
+                          value={minGpaValue}
+                          onChange={(event) => setMinGpaValue(event.target.value)}
+                          className={inputClassName}
+                          inputMode="decimal"
+                          placeholder="เช่น 2.75"
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -319,11 +505,36 @@ export function CreateReviewForm() {
 
           <div className={step === 2 ? "animate-fade-in-up grid w-full gap-[26px] max-sm:gap-[22px]" : "hidden"}>
           <FormSection title="รีวิว" icon={<MessageIcon />}>
-            <TextArea label="ขั้นตอนการสมัคร" placeholder="สมัครผ่านช่องทางไหน มีกี่รอบ ใช้เวลานานไหม ต้องเตรียมอะไรเป็นพิเศษ" />
-            <TextArea label="งานที่ได้รับ" placeholder="หน้าที่ที่รับผิดชอบ โปรเจคที่ได้ทำ ความรู้หรือเครื่องมือที่ใช้ เนื้องานตรงกับตำแหน่งที่สมัครไหม" />
-            <TextArea label="บรรยากาศการทำงาน" placeholder="บรรยากาศภายในทีม วัฒนธรรมองค์กร พี่เลี้ยง" />
-            <TextArea label="สวัสดิการและการเดินทาง" placeholder="สวัสดิการที่ได้รับ สิ่งอำนวยความสะดวก การเดินทางไปทำงาน" />
-            <TextArea label="สิ่งที่อยากบอกต่อ" placeholder="ชอบอะไร ไม่ชอบอะไร ได้เรียนรู้อะไร และอยากแนะนำคนที่สนใจว่าอะไร" />
+            <TextArea
+              label="ขั้นตอนการสมัคร"
+              placeholder="สมัครผ่านช่องทางไหน มีกี่รอบ ใช้เวลานานไหม ต้องเตรียมอะไรเป็นพิเศษ"
+              value={applicationText}
+              onChange={setApplicationText}
+            />
+            <TextArea
+              label="งานที่ได้รับ"
+              placeholder="หน้าที่ที่รับผิดชอบ โปรเจคที่ได้ทำ ความรู้หรือเครื่องมือที่ใช้ เนื้องานตรงกับตำแหน่งที่สมัครไหม"
+              value={workText}
+              onChange={setWorkText}
+            />
+            <TextArea
+              label="บรรยากาศการทำงาน"
+              placeholder="บรรยากาศภายในทีม วัฒนธรรมองค์กร พี่เลี้ยง"
+              value={atmosphereText}
+              onChange={setAtmosphereText}
+            />
+            <TextArea
+              label="สวัสดิการและการเดินทาง"
+              placeholder="สวัสดิการที่ได้รับ สิ่งอำนวยความสะดวก การเดินทางไปทำงาน"
+              value={welfareText}
+              onChange={setWelfareText}
+            />
+            <TextArea
+              label="สิ่งที่อยากบอกต่อ"
+              placeholder="ชอบอะไร ไม่ชอบอะไร ได้เรียนรู้อะไร และอยากแนะนำคนที่สนใจว่าอะไร"
+              value={adviceText}
+              onChange={setAdviceText}
+            />
           </FormSection>
           </div>
 
@@ -380,6 +591,18 @@ export function CreateReviewForm() {
           </section>
 
           <div className="grid gap-2">
+            <div className="text-sm font-medium leading-[1.4] text-zinc-700">แนะนำบริษัทนี้ไหม</div>
+            <div className="grid gap-[10px] sm:grid-cols-2">
+              <ToggleBox selected={recommended === "no"} onClick={() => setRecommended(recommended === "no" ? null : "no")}>
+                ไม่แนะนำ
+              </ToggleBox>
+              <ToggleBox selected={recommended === "yes"} onClick={() => setRecommended(recommended === "yes" ? null : "yes")}>
+                แนะนำ
+              </ToggleBox>
+            </div>
+          </div>
+
+          <div className="grid gap-2">
             <label
               className={`flex cursor-pointer items-center gap-[10px] rounded-md border px-[14px] py-3 ${
                 anonymous ? "border-zinc-900 bg-white" : "border-zinc-300 bg-white"
@@ -394,6 +617,8 @@ export function CreateReviewForm() {
               <span className="text-sm text-zinc-700">ส่งรีวิวแบบไม่ระบุตัวตน</span>
             </label>
           </div>
+
+          {submitError && <p className="m-0 text-sm text-internia-primary">{submitError}</p>}
           </div>
 
           {step === 1 && (
@@ -430,12 +655,18 @@ export function CreateReviewForm() {
               <button
                 type="button"
                 onClick={() => goToStep(2)}
-                className="min-h-11 rounded-full border border-zinc-300 bg-white text-sm font-semibold text-zinc-700 transition active:scale-[0.98] hover:border-zinc-400"
+                disabled={submitting}
+                className="min-h-11 rounded-full border border-zinc-300 bg-white text-sm font-semibold text-zinc-700 transition active:scale-[0.98] hover:border-zinc-400 disabled:opacity-60"
               >
                 ย้อนกลับ
               </button>
-              <button type="button" className="min-h-11 rounded-full bg-internia-primary text-sm font-semibold text-white shadow-crisp transition active:scale-[0.98] hover:bg-internia-primaryDark">
-                ยืนยันส่งรีวิว
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="min-h-11 rounded-full bg-internia-primary text-sm font-semibold text-white shadow-crisp transition active:scale-[0.98] hover:bg-internia-primaryDark disabled:opacity-60"
+              >
+                {submitting ? "กำลังส่ง..." : mode === "edit" ? "บันทึกการแก้ไข" : "ยืนยันส่งรีวิว"}
               </button>
             </div>
           )}
@@ -515,13 +746,25 @@ function Field({ label, required, children }: { label: string; required?: boolea
   );
 }
 
-function TextArea({ label, placeholder }: { label: string; placeholder: string }) {
+function TextArea({
+  label,
+  placeholder,
+  value,
+  onChange,
+}: {
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
   return (
     <div className="grid gap-2">
       <p className="m-0 text-sm font-medium leading-[1.4] text-zinc-700">
         {label} <OptionalTag />
       </p>
       <textarea
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         className="min-h-[188px] w-full resize-y rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-internia-primary/10"
       />

@@ -3,16 +3,47 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Company, Review } from "@/lib/mock-data";
+import type { Company, Review } from "@/lib/api/types";
+import { likeReview, unlikeReview } from "@/lib/api/reviews";
 import { CompanyLogo } from "./CompanyLogo";
-import { FaceIcon } from "./FaceIcon";
+import { FaceIcon, scoreToFace } from "./FaceIcon";
 
 const scoreRows = [
-  ["work", "ด้านเนื้องาน"],
-  ["social", "ด้านสังคม"],
-  ["mentor", "ด้านพี่เลี้ยง"],
-  ["experience", "ด้านประสบการณ์"],
+  ["workScore", "ด้านเนื้องาน"],
+  ["socialScore", "ด้านสังคม"],
+  ["mentorScore", "ด้านพี่เลี้ยง"],
+  ["experienceScore", "ด้านประสบการณ์"],
 ] as const;
+
+function daysAgo(createdAt: string) {
+  const diffMs = Date.now() - new Date(createdAt).getTime();
+  return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+}
+
+function formatDate(date: string) {
+  return new Date(date).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function formatDuration(review: Review) {
+  return `${formatDate(review.startDate)} - ${formatDate(review.endDate)}`;
+}
+
+function formatCompensation(review: Review) {
+  if (review.hasCompensation === true) {
+    return `${review.compensationAmount ?? "-"} ${review.compensationUnit ?? ""}`.trim();
+  }
+  if (review.hasCompensation === false) return "ไม่มีค่าตอบแทน";
+  return null;
+}
+
+function formatOpenYears(review: Review) {
+  if (review.hasYearLimit === true) {
+    const years = review.acceptedYears ?? [];
+    return years.length > 0 ? `ชั้นปีที่ ${years.join(", ")}` : null;
+  }
+  if (review.hasYearLimit === false) return "ทุกชั้นปี";
+  return null;
+}
 
 export function ReviewCard({
   review,
@@ -24,7 +55,35 @@ export function ReviewCard({
   readMoreHref?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [likeCount, setLikeCount] = useState(review.likeCount);
+  const [likedByMe, setLikedByMe] = useState(review.likedByMe);
+  const [liking, setLiking] = useState(false);
   const router = useRouter();
+
+  const reviewerName = review.anonymous ? "ไม่ระบุตัวตน" : (review.reviewer.username ?? "ไม่ระบุตัวตน");
+  const compensationText = formatCompensation(review);
+  const openYearsText = formatOpenYears(review);
+
+  async function toggleLike(event: React.MouseEvent) {
+    event.stopPropagation();
+    if (liking) return;
+
+    const previousCount = likeCount;
+    const previousLiked = likedByMe;
+    const nextLiked = !likedByMe;
+
+    setLikedByMe(nextLiked);
+    setLikeCount((count) => count + (nextLiked ? 1 : -1));
+    setLiking(true);
+    try {
+      await (nextLiked ? likeReview(review.id) : unlikeReview(review.id));
+    } catch {
+      setLikedByMe(previousLiked);
+      setLikeCount(previousCount);
+    } finally {
+      setLiking(false);
+    }
+  }
 
   return (
     <article
@@ -40,40 +99,59 @@ export function ReviewCard({
     >
       {company && (
         <Link
-          href={`/company/${company.id}`}
+          href={`/company/${company.slug}`}
           className="-mb-1 flex items-center gap-2.5 text-zinc-900 no-underline"
         >
-          <CompanyLogo id={company.id} size={28} />
+          <CompanyLogo logoUrl={company.logoUrl} alt={company.name} size={28} />
           <span className="text-sm font-semibold">{company.name}</span>
         </Link>
       )}
       <div className="grid grid-cols-[48px_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1">
-        <FaceIcon score={review.scores.experience} className="row-span-2 h-10 w-10 rounded-xl" />
-        <h2 className="m-0 min-w-0 text-md font-bold leading-tight">{review.name}</h2>
-        <span className="whitespace-nowrap text-right text-sm leading-tight text-zinc-500">{review.daysAgo} วันที่แล้ว</span>
-        <p className="m-0 min-w-0 text-sm leading-tight text-zinc-500">
-          {review.department} | Intania {review.intania}
-        </p>
+        <FaceIcon score={scoreToFace(review.experienceScore)} className="row-span-2 h-10 w-10 rounded-xl" />
+        <h2 className="m-0 min-w-0 text-md font-bold leading-tight">{reviewerName}</h2>
+        <span className="whitespace-nowrap text-right text-sm leading-tight text-zinc-500">{daysAgo(review.createdAt)} วันที่แล้ว</span>
+        {!review.anonymous && review.reviewer.department && (
+          <p className="m-0 min-w-0 text-sm leading-tight text-zinc-500">{review.reviewer.department}</p>
+        )}
+        {review.canEdit && (
+          <Link
+            href={`/review/${review.id}/edit`}
+            className="col-start-3 justify-self-end text-sm font-semibold text-internia-primary no-underline transition hover:text-internia-primaryDark"
+          >
+            แก้ไข
+          </Link>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:flex sm:flex-wrap sm:items-center sm:gap-x-5">
         {scoreRows.map(([key, label]) => (
           <div key={key} className="inline-flex min-w-0 items-center gap-2 text-sm font-normal leading-tight text-zinc-600">
-            <FaceIcon score={review.scores[key]} />
+            <FaceIcon score={scoreToFace(review[key])} />
             <span className="whitespace-nowrap">{label}</span>
           </div>
         ))}
+        <button
+          type="button"
+          onClick={toggleLike}
+          disabled={liking}
+          className={`inline-flex min-w-0 items-center gap-1.5 text-sm font-normal leading-tight transition disabled:opacity-60 ${
+            likedByMe ? "text-internia-primary" : "text-zinc-500 hover:text-internia-primary"
+          }`}
+        >
+          <HeartIcon filled={likedByMe} className="h-[18px] w-[18px] shrink-0" />
+          <span className="whitespace-nowrap">{likeCount}</span>
+        </button>
       </div>
 
       <div className="grid gap-3 pt-0.5">
         <h3 className="m-0 text-lg font-bold leading-tight">{review.position}</h3>
         <div className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-xl bg-zinc-50 p-3 sm:grid-cols-3">
           {[
-            { icon: <ClockIcon />, text: review.duration },
+            { icon: <ClockIcon />, text: formatDuration(review) },
             { icon: <WorkModeIcon />, text: review.workMode },
-            { icon: <CoinIcon />, text: review.compensation },
-            { icon: <GraduationIcon />, text: `รับ${review.openYears}` },
-            review.minGpa != null ? { icon: <GpaIcon />, text: `เกรดเฉลี่ยขั้นต่ำ ${review.minGpa.toFixed(2)}` } : null,
+            compensationText ? { icon: <CoinIcon />, text: compensationText } : null,
+            openYearsText ? { icon: <GraduationIcon />, text: `รับ${openYearsText}` } : null,
+            review.hasMinGpa && review.minGpa != null ? { icon: <GpaIcon />, text: `เกรดเฉลี่ยขั้นต่ำ ${review.minGpa.toFixed(2)}` } : null,
           ]
             .filter((fact): fact is { icon: React.ReactElement; text: string } => fact !== null)
             .map((fact) => (
@@ -88,20 +166,24 @@ export function ReviewCard({
       </div>
 
       <div className="grid gap-[18px] border-t border-zinc-100 pt-[18px] text-sm leading-[1.35] text-zinc-700">
-        <ReviewSection
-          title="ขั้นตอนการสมัคร"
-          icon={<ApplicationIcon />}
-          text={review.sections.application}
-          clamp={readMoreHref ? true : !expanded}
-        />
+        {review.applicationSection && (
+          <ReviewSection
+            title="ขั้นตอนการสมัคร"
+            icon={<ApplicationIcon />}
+            text={review.applicationSection}
+            clamp={readMoreHref ? true : !expanded}
+          />
+        )}
         {expanded && !readMoreHref && (
           <div className="animate-fade-in-up grid gap-[18px]">
-            <ReviewSection title="งานที่ได้รับ" icon={<WorkIcon />} text={review.sections.work} />
-            <ReviewSection title="บรรยากาศการทำงาน" icon={<AtmosphereIcon />} text={review.sections.atmosphere} />
-            {review.sections.welfare && (
-              <ReviewSection title="สวัสดิการและการเดินทาง" icon={<WelfareIcon />} text={review.sections.welfare} />
+            {review.workSection && <ReviewSection title="งานที่ได้รับ" icon={<WorkIcon />} text={review.workSection} />}
+            {review.atmosphereSection && (
+              <ReviewSection title="บรรยากาศการทำงาน" icon={<AtmosphereIcon />} text={review.atmosphereSection} />
             )}
-            <ReviewSection title="สิ่งที่อยากบอกต่อ" icon={<AdviceIcon />} text={review.sections.advice} />
+            {review.welfareSection && (
+              <ReviewSection title="สวัสดิการและการเดินทาง" icon={<WelfareIcon />} text={review.welfareSection} />
+            )}
+            {review.adviceSection && <ReviewSection title="สิ่งที่อยากบอกต่อ" icon={<AdviceIcon />} text={review.adviceSection} />}
           </div>
         )}
         {readMoreHref ? (
@@ -146,6 +228,25 @@ function ReviewSection({
       </h4>
       <p className="m-0 font-normal">{clamp ? `${text.slice(0, 170)} ...` : text}</p>
     </section>
+  );
+}
+
+function HeartIcon({ filled, className }: { filled: boolean; className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" />
+    </svg>
   );
 }
 

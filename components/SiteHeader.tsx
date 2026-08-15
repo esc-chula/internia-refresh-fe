@@ -11,12 +11,25 @@ export function SiteHeader() {
           Internia
         </Link>
 
-        <Link
-          href="/create/line-man-wongnai"
-          className="inline-flex h-9 items-center rounded-full bg-white px-4 text-sm font-semibold text-black no-underline shadow-crisp transition active:scale-95 hover:bg-white/90"
-        >
-          เขียนรีวิว
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/profile"
+            className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-white no-underline transition hover:bg-white/10"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6" />
+            </svg>
+            โปรไฟล์
+          </Link>
+
+          <Link
+            href="/create"
+            className="inline-flex h-9 items-center rounded-full bg-white px-4 text-sm font-semibold text-black no-underline shadow-crisp transition active:scale-95 hover:bg-white/90"
+          >
+            เขียนรีวิว
+          </Link>
+        </div>
       </div>
     </header>
   );

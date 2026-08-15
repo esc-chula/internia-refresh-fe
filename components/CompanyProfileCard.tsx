@@ -1,4 +1,4 @@
-import { Company } from "@/lib/mock-data";
+import type { Company } from "@/lib/api/types";
 import { CompanyLogo } from "./CompanyLogo";
 import { FaceIcon, scoreToFace } from "./FaceIcon";
 import { HeroBackground } from "./HeroBackground";
@@ -17,14 +17,14 @@ export function CompanyProfileCard({ company }: { company: Company }) {
         <HeroBackground />
 
         <div className="relative z-10">
-          <CompanyLogo id={company.id} size={88} />
+          <CompanyLogo logoUrl={company.logoUrl} alt={company.name} size={88} />
         </div>
 
         <div className="relative z-10 grid min-w-0 gap-1.5">
           <h1 className="m-0 text-2xl font-extrabold tracking-[-0.01em] text-zinc-900 md:text-3xl">{company.name}</h1>
 
           <div className="flex flex-wrap items-center gap-2.5 text-sm text-zinc-500">
-            <span className="rounded-full bg-white px-3 py-1 text-sm font-medium text-zinc-500">{company.tag}</span>
+            <span className="rounded-full bg-white px-3 py-1 text-sm font-medium text-zinc-500">{company.category}</span>
             <span className="inline-flex items-center gap-1.5">
               <FaceIcon score={scoreToFace(company.rating)} className="h-4 w-4 shrink-0 rounded-[5px]" />
               <span className="text-base font-extrabold text-zinc-900">{company.rating.toFixed(1)}</span> / 5 (จาก {company.reviewCount} รีวิว)
