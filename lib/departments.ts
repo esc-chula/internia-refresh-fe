@@ -1,7 +1,4 @@
-// Must stay in sync with allowedDepartments in
-// internia-refresh-api/internal/core/services/profile_service.go — the
-// backend is the source of truth for validation, this list is just what
-// renders in the onboarding/profile department picker.
+
 export const departments = [
   "Computer Engineering",
   "Electrical Engineering",

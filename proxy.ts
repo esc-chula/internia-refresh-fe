@@ -1,10 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-// Route-protection redirects only — the actual auth boundary is the
-// backend rejecting/accepting the Bearer token on each API call. These
-// cookies (set client-side after login/onboarding, see lib/auth-storage.ts)
-// exist purely so this proxy can make routing decisions without a network
-// round-trip (PLAN.md decision #6).
 const PUBLIC_PATHS = ["/landing", "/login", "/auth/callback"];
 
 export function proxy(request: NextRequest) {

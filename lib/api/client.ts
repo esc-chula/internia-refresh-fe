@@ -9,8 +9,6 @@ type RequestOptions = {
   auth?: boolean;
 };
 
-// Concurrent 401s should trigger only one refresh call, not one per
-// in-flight request — everyone awaits the same promise.
 let refreshPromise: Promise<boolean> | null = null;
 
 async function tryRefresh(): Promise<boolean> {
@@ -53,10 +51,6 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return payload as T;
 }
 
-// doRequest sends the request and, on a 401 from an authenticated call,
-// transparently refreshes the access token and retries once before giving
-// up (and clearing the session so route protection kicks the user to
-// /login on the next navigation).
 async function doRequest(url: string, init: RequestInit, useAuth: boolean, isRetry = false): Promise<Response> {
   const response = await fetch(url, init);
 
@@ -95,9 +89,6 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   return handleResponse<T>(response);
 }
 
-// apiFetchForm sends multipart/form-data (e.g. the "new company" logo
-// upload) — no Content-Type header here so the browser sets the correct
-// multipart boundary itself.
 export async function apiFetchForm<T>(path: string, form: FormData): Promise<T> {
   const headers: Record<string, string> = {};
   const token = getAccessToken();
@@ -108,8 +99,6 @@ export async function apiFetchForm<T>(path: string, form: FormData): Promise<T> 
   return handleResponse<T>(response);
 }
 
-// apiOrigin strips the "/api/v1" suffix so callers can build URLs for
-// non-API static assets served by the same backend (e.g. /uploads/*).
 export function apiOrigin(): string {
   return API_BASE.replace(/\/api\/v1\/?$/, "");
 }

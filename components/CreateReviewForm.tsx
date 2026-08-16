@@ -47,6 +47,79 @@ const steps = [
   { title: "ให้คะแนนและส่งรีวิว" },
 ] as const;
 
+const DRAFT_KEY = "internia_review_draft";
+
+type ReviewDraft = {
+  step?: 1 | 2 | 3;
+  company?: string;
+  companyType?: string;
+  position?: string;
+  startDate?: string;
+  endDate?: string;
+  workMode?: string;
+  salaryMode?: "yes" | "no" | null;
+  salaryAmount?: string;
+  salaryUnit?: string;
+  yearLimit?: "yes" | "no" | null;
+  yearValues?: string[];
+  gpaMode?: "yes" | "no" | null;
+  minGpaValue?: string;
+  applicationText?: string;
+  workText?: string;
+  atmosphereText?: string;
+  welfareText?: string;
+  adviceText?: string;
+  anonymous?: boolean;
+  scores?: Record<string, number | null>;
+};
+
+function loadDraft(): ReviewDraft | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(DRAFT_KEY);
+    return raw ? (JSON.parse(raw) as ReviewDraft) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(draft: ReviewDraft) {
+  try {
+    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  } catch {}
+}
+
+function clearDraft() {
+  try {
+    window.localStorage.removeItem(DRAFT_KEY);
+  } catch {}
+}
+
+function isDraftEmpty(d: ReviewDraft) {
+  return (
+    !d.company &&
+    !d.companyType &&
+    !d.position &&
+    !d.startDate &&
+    !d.endDate &&
+    !d.workMode &&
+    !d.salaryMode &&
+    !d.salaryAmount &&
+    !d.salaryUnit &&
+    !d.yearLimit &&
+    !(d.yearValues && d.yearValues.length > 0) &&
+    !d.gpaMode &&
+    !d.minGpaValue &&
+    !d.applicationText &&
+    !d.workText &&
+    !d.atmosphereText &&
+    !d.welfareText &&
+    !d.adviceText &&
+    !d.anonymous &&
+    !(d.scores && Object.keys(d.scores).length > 0)
+  );
+}
+
 export function CreateReviewForm({
   mode = "create",
   reviewId,
@@ -61,9 +134,12 @@ export function CreateReviewForm({
   fixedCompanyName?: string;
 } = {}) {
   const router = useRouter();
+
+  const [draft, setDraft] = useState<ReviewDraft | null>(null);
+  const [draftDismissed, setDraftDismissed] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const formTopRef = useRef<HTMLDivElement>(null);
-  const [showMoreDetails, setShowMoreDetails] = useState(mode === "edit");
+  const [showMoreDetails, setShowMoreDetails] = useState(true);
   const [company, setCompany] = useState("");
   const [companyFocused, setCompanyFocused] = useState(false);
   const [companyType, setCompanyType] = useState("");
@@ -97,9 +173,6 @@ export function CreateReviewForm({
   const [welfareText, setWelfareText] = useState(initialReview?.welfareSection ?? "");
   const [adviceText, setAdviceText] = useState(initialReview?.adviceSection ?? "");
 
-  const [recommended, setRecommended] = useState<"yes" | "no" | null>(
-    initialReview ? (initialReview.recommended ? "yes" : "no") : null,
-  );
   const [anonymous, setAnonymous] = useState(initialReview?.anonymous ?? false);
   const [scores, setScores] = useState<Record<string, number | null>>(
     initialReview
@@ -123,6 +196,97 @@ export function CreateReviewForm({
       .then((res) => setKnownCompanies(res.companies))
       .catch(() => {});
   }, [mode]);
+
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    if (mode !== "create") {
+      setHydrated(true);
+      return;
+    }
+    const loaded = loadDraft();
+    if (loaded) {
+      setDraft(loaded);
+      if (loaded.step) setStep(loaded.step);
+      if (loaded.company) setCompany(loaded.company);
+      if (loaded.companyType) setCompanyType(loaded.companyType);
+      if (loaded.position) setPosition(loaded.position);
+      if (loaded.startDate) setStartDate(loaded.startDate);
+      if (loaded.endDate) setEndDate(loaded.endDate);
+      if (loaded.workMode) setWorkMode(loaded.workMode);
+      if (loaded.salaryMode !== undefined) setSalaryMode(loaded.salaryMode);
+      if (loaded.salaryAmount) setSalaryAmount(loaded.salaryAmount);
+      if (loaded.salaryUnit) setSalaryUnit(loaded.salaryUnit);
+      if (loaded.yearLimit !== undefined) setYearLimit(loaded.yearLimit);
+      if (loaded.yearValues) setYearValues(loaded.yearValues);
+      if (loaded.gpaMode !== undefined) setGpaMode(loaded.gpaMode);
+      if (loaded.minGpaValue) setMinGpaValue(loaded.minGpaValue);
+      if (loaded.applicationText) setApplicationText(loaded.applicationText);
+      if (loaded.workText) setWorkText(loaded.workText);
+      if (loaded.atmosphereText) setAtmosphereText(loaded.atmosphereText);
+      if (loaded.welfareText) setWelfareText(loaded.welfareText);
+      if (loaded.adviceText) setAdviceText(loaded.adviceText);
+      if (loaded.anonymous !== undefined) setAnonymous(loaded.anonymous);
+      if (loaded.scores) setScores(loaded.scores);
+    }
+    setHydrated(true);
+
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated || mode !== "create") return;
+    const current: ReviewDraft = {
+      step,
+      company,
+      companyType,
+      position,
+      startDate,
+      endDate,
+      workMode,
+      salaryMode,
+      salaryAmount,
+      salaryUnit,
+      yearLimit,
+      yearValues,
+      gpaMode,
+      minGpaValue,
+      applicationText,
+      workText,
+      atmosphereText,
+      welfareText,
+      adviceText,
+      anonymous,
+      scores,
+    };
+    if (isDraftEmpty(current)) {
+      clearDraft();
+      return;
+    }
+    saveDraft(current);
+  }, [
+    hydrated,
+    mode,
+    step,
+    company,
+    companyType,
+    position,
+    startDate,
+    endDate,
+    workMode,
+    salaryMode,
+    salaryAmount,
+    salaryUnit,
+    yearLimit,
+    yearValues,
+    gpaMode,
+    minGpaValue,
+    applicationText,
+    workText,
+    atmosphereText,
+    welfareText,
+    adviceText,
+    anonymous,
+    scores,
+  ]);
 
   const normalizedCompany = company.trim().toLowerCase();
   const matchedCompanyItem = knownCompanies.find((item) => item.name.toLowerCase() === normalizedCompany);
@@ -185,11 +349,12 @@ export function CreateReviewForm({
         startDate,
         endDate,
         workMode: workMode as WorkMode,
-        hasCompensation: salaryMode === "yes",
+
+        ...(salaryMode !== null ? { hasCompensation: salaryMode === "yes" } : {}),
         ...(salaryMode === "yes" ? { compensationAmount: Number(salaryAmount), compensationUnit: salaryUnit } : {}),
-        hasYearLimit: yearLimit === "yes",
+        ...(yearLimit !== null ? { hasYearLimit: yearLimit === "yes" } : {}),
         ...(yearLimit === "yes" ? { acceptedYears: yearValues.map(Number) } : {}),
-        hasMinGpa: gpaMode === "yes",
+        ...(gpaMode !== null ? { hasMinGpa: gpaMode === "yes" } : {}),
         ...(gpaMode === "yes" ? { minGpa: Number(minGpaValue) } : {}),
         ...(applicationText.trim() ? { applicationSection: applicationText.trim() } : {}),
         ...(workText.trim() ? { workSection: workText.trim() } : {}),
@@ -201,7 +366,6 @@ export function CreateReviewForm({
         mentorScore: scores.mentor!,
         experienceScore: scores.experience!,
         overallScore: scores.overall!,
-        recommended: recommended === "yes",
         anonymous,
       };
 
@@ -211,11 +375,6 @@ export function CreateReviewForm({
         return;
       }
 
-      // New-company sub-flow (PLAN.md decision #4): create the company
-      // first if the typed name didn't match an existing one, then use
-      // its slug for the review. If review creation fails afterward, the
-      // company is left created (harmless) — retrying the review submit
-      // will now match it by name.
       let slug = matchedCompanyItem?.slug;
       if (!slug) {
         const created = await createCompany({ name: company.trim(), category: companyType, logo: logoFile });
@@ -223,6 +382,7 @@ export function CreateReviewForm({
       }
 
       await createReview(slug, payload);
+      clearDraft();
       router.push(`/company/${slug}`);
     } catch (err) {
       setSubmitError(err instanceof ApiError ? err.message : "ส่งรีวิวไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
@@ -245,6 +405,34 @@ export function CreateReviewForm({
               ))}
             </div>
           </div>
+
+          {draft && !draftDismissed && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700">
+              <span>กู้คืนข้อมูลที่เขียนค้างไว้ให้แล้ว</span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearDraft();
+                    window.location.reload();
+                  }}
+                  className="font-semibold text-internia-primary transition hover:text-internia-primaryDark"
+                >
+                  ลบร่างนี้แล้วเริ่มใหม่
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDraftDismissed(true)}
+                  aria-label="ปิดข้อความนี้"
+                  className="text-zinc-400 transition hover:text-zinc-600"
+                >
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className={step === 1 ? "animate-fade-in-up grid w-full gap-[26px] max-sm:gap-[22px]" : "hidden"}>
           {mode === "edit" ? (
@@ -602,18 +790,6 @@ export function CreateReviewForm({
           </section>
 
           <div className="grid gap-2">
-            <div className="text-sm font-medium leading-[1.4] text-zinc-700">แนะนำบริษัทนี้ไหม</div>
-            <div className="grid gap-[10px] sm:grid-cols-2">
-              <ToggleBox selected={recommended === "no"} onClick={() => setRecommended(recommended === "no" ? null : "no")}>
-                ไม่แนะนำ
-              </ToggleBox>
-              <ToggleBox selected={recommended === "yes"} onClick={() => setRecommended(recommended === "yes" ? null : "yes")}>
-                แนะนำ
-              </ToggleBox>
-            </div>
-          </div>
-
-          <div className="grid gap-2">
             <label
               className={`flex cursor-pointer items-center gap-[10px] rounded-md border px-[14px] py-3 ${
                 anonymous ? "border-zinc-900 bg-white" : "border-zinc-300 bg-white"
@@ -768,16 +944,27 @@ function TextArea({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.max(el.scrollHeight, 64)}px`;
+  }, [value]);
+
   return (
     <div className="grid gap-2">
       <p className="m-0 text-sm font-medium leading-[1.4] text-zinc-700">
         {label} <OptionalTag />
       </p>
       <textarea
+        ref={ref}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="min-h-[188px] w-full resize-y rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-internia-primary/10"
+        rows={2}
+        className="min-h-[64px] w-full resize-none overflow-hidden rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-internia-primary/10"
       />
     </div>
   );

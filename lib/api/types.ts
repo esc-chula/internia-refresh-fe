@@ -22,7 +22,6 @@ export type Company = {
   rating: number;
   reviewCount: number;
   scores: CompanyScores;
-  recommendationCount: number;
 };
 
 export type CompanyListResponse = {
@@ -64,7 +63,6 @@ export type Review = {
   mentorScore: number;
   experienceScore: number;
   overallScore: number;
-  recommended: boolean;
   anonymous: boolean;
   createdAt: string;
   likeCount: number;
@@ -101,7 +99,6 @@ export type ReviewPayload = {
   mentorScore: number;
   experienceScore: number;
   overallScore: number;
-  recommended: boolean;
   anonymous: boolean;
 };
 

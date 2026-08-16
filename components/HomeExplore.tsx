@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Fuse from "fuse.js";
 import Link from "next/link";
 import { HeroBackground } from "./HeroBackground";
+import { CardSkeleton } from "./CardSkeleton";
 import { CompanyCard } from "./CompanyCard";
 import { CompanyLogo } from "./CompanyLogo";
 import { ReviewCard } from "./ReviewCard";
@@ -21,9 +22,7 @@ type CompanySort = "rating" | "reviews" | "name";
 type ReviewSort = "newest" | "rating";
 
 const PAGE_SIZE = 15;
-// Fetch-once, filter/sort client-side (PLAN.md decision #2) — revisit
-// with real server-side pagination if company/review count grows past
-// this scale.
+
 const FETCH_ALL_LIMIT = 300;
 
 const TAG_OPTIONS = [
@@ -75,8 +74,6 @@ const gpaFilterOptions = [
   { value: "3.00", label: "เกรดเฉลี่ย 3.00 ขึ้นไป" },
 ];
 
-// hasYearLimit !== true means "no restriction stated" (or explicitly "all
-// years") — permissive, same treatment as compensation/minGpa nulls.
 function matchesYearFilter(review: Review, years: string[]) {
   if (years.length === 0) return true;
   if (review.hasYearLimit !== true) return true;
@@ -93,6 +90,7 @@ function matchesMinGpaFilter(review: Review, gpas: string[]) {
 export function HomeExplore() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
@@ -108,15 +106,26 @@ export function HomeExplore() {
       })
       .catch(() => {
         if (!cancelled) setLoadError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const companyBySlug = useMemo(() => new Map(companies.map((company) => [company.slug, company])), [companies]);
+  const companiesWithReviews = useMemo(() => companies.filter((company) => company.reviewCount > 0), [companies]);
 
-  const companySearchIndex = useMemo(() => new Fuse(companies, { keys: ["name", "category"], threshold: 0.35 }), [companies]);
+  const companyBySlug = useMemo(
+    () => new Map(companiesWithReviews.map((company) => [company.slug, company])),
+    [companiesWithReviews],
+  );
+
+  const companySearchIndex = useMemo(
+    () => new Fuse(companiesWithReviews, { keys: ["name", "category"], threshold: 0.35 }),
+    [companiesWithReviews],
+  );
 
   const reviewSearchItems = useMemo(
     () =>
@@ -183,7 +192,7 @@ export function HomeExplore() {
 
   const filteredCompanies = useMemo(() => {
     const q = query.trim();
-    const base = q ? companySearchIndex.search(q).map((result) => result.item) : companies;
+    const base = q ? companySearchIndex.search(q).map((result) => result.item) : companiesWithReviews;
     const list = base.filter((company) => tag.length === 0 || tag.includes(company.category));
 
     return [...list].sort((a, b) => {
@@ -191,7 +200,7 @@ export function HomeExplore() {
       if (companySort === "reviews") return (b.reviewCount - a.reviewCount) * dir;
       return a.name.localeCompare(b.name) * -dir;
     });
-  }, [query, tag, companySort, dir, companies, companySearchIndex]);
+  }, [query, tag, companySort, dir, companiesWithReviews, companySearchIndex]);
 
   const filteredReviews = useMemo(() => {
     const q = query.trim();
@@ -370,7 +379,15 @@ export function HomeExplore() {
             </p>
           )}
 
-          {!loadError && mode === "company" ? (
+          {loading && !loadError && (
+            <div className={mode === "company" ? "grid grid-cols-1 gap-4 md:grid-cols-3" : "grid grid-cols-1 gap-4 md:grid-cols-2"}>
+              {Array.from({ length: mode === "company" ? 6 : 4 }).map((_, index) => (
+                <CardSkeleton key={index} tall={mode === "review"} />
+              ))}
+            </div>
+          )}
+
+          {!loading && !loadError && mode === "company" ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {filteredCompanies.slice(0, visibleCount).map((company, index) => (
                 <div key={company.id} className="animate-fade-in-up" style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}>
@@ -380,7 +397,7 @@ export function HomeExplore() {
             </div>
           ) : null}
 
-          {!loadError && mode === "review" ? (
+          {!loading && !loadError && mode === "review" ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {filteredReviews.slice(0, visibleCount).map((review, index) => (
                 <div key={review.id} className="animate-fade-in-up" style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}>
@@ -394,7 +411,7 @@ export function HomeExplore() {
             </div>
           ) : null}
 
-          {!loadError && results.length === 0 && (
+          {!loading && !loadError && results.length === 0 && (
             <p className="rounded-2xl border border-dashed border-zinc-200 py-12 text-center text-sm text-zinc-400">
               ไม่พบผลลัพธ์ที่ตรงกับเงื่อนไขที่เลือก
             </p>

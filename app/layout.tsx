@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_Thai, Noto_Sans_Thai_Looped } from "next/font/google";
+import { NotificationProvider } from "@/components/Notifications";
 import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
@@ -30,8 +31,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="th">
       <body className={`${inter.variable} ${notoSansThai.variable} ${notoSansThaiLooped.variable} bg-white font-sans antialiased text-zinc-900`}>
-        <SiteHeader />
-        {children}
+        <NotificationProvider>
+          <SiteHeader />
+          {children}
+        </NotificationProvider>
       </body>
     </html>
   );

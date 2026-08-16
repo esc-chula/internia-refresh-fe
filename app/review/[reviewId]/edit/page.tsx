@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { BackLink } from "@/components/BackLink";
+import { CardSkeleton } from "@/components/CardSkeleton";
 import { CreateReviewForm } from "@/components/CreateReviewForm";
 import { getCompany } from "@/lib/api/companies";
 import { getReview } from "@/lib/api/reviews";
@@ -29,10 +30,7 @@ export default function EditReviewPage() {
         try {
           const fetchedCompany = await getCompany(fetchedReview.companySlug);
           if (!cancelled) setCompany(fetchedCompany);
-        } catch {
-          // Company lookup is only for display (name/logo) — the edit
-          // form still works with just the slug if this fails.
-        }
+        } catch {}
       })
       .catch(() => {
         if (!cancelled) setError("ไม่พบรีวิวที่ต้องการแก้ไข");
@@ -60,7 +58,7 @@ export default function EditReviewPage() {
           />
         )}
 
-        {!error && !review && <p className="text-center text-sm text-zinc-400">กำลังโหลด...</p>}
+        {!error && !review && <CardSkeleton tall />}
       </div>
     </main>
   );

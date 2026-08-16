@@ -40,7 +40,10 @@ export function updateReview(reviewId: string, payload: ReviewPayload) {
   });
 }
 
-// Both idempotent on the backend — repeat calls still return success.
+export function deleteReview(reviewId: string) {
+  return apiFetch<{ ok: boolean }>(`/reviews/${encodeURIComponent(reviewId)}`, { method: "DELETE", auth: true });
+}
+
 export function likeReview(reviewId: string) {
   return apiFetch<{ ok: boolean }>(`/reviews/${encodeURIComponent(reviewId)}/like`, { method: "PUT", auth: true });
 }

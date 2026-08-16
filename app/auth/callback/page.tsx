@@ -19,9 +19,6 @@ export default function AuthCallbackPage() {
       return;
     }
 
-    // Store the tokens first (unknown onboarded status yet) so getMe()'s
-    // Authorization header has something to send, then correct the
-    // onboarded cookie once we know it.
     setSession(accessToken, refreshToken, false);
 
     getMe()

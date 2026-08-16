@@ -4,8 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Company, Review } from "@/lib/api/types";
-import { likeReview, unlikeReview } from "@/lib/api/reviews";
+import { deleteReview, likeReview, unlikeReview } from "@/lib/api/reviews";
 import { CompanyLogo } from "./CompanyLogo";
+import { useConfirm, useToast } from "./Notifications";
 import { FaceIcon, scoreToFace } from "./FaceIcon";
 
 const scoreRows = [
@@ -15,17 +16,39 @@ const scoreRows = [
   ["experienceScore", "ด้านประสบการณ์"],
 ] as const;
 
-function daysAgo(createdAt: string) {
-  const diffMs = Date.now() - new Date(createdAt).getTime();
-  return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+function formatRelativeTime(createdAt: string) {
+  const diffMs = Math.max(0, Date.now() - new Date(createdAt).getTime());
+  const minutes = Math.floor(diffMs / (1000 * 60));
+  if (minutes < 1) return "ตอนนี้";
+  if (minutes < 60) return `${minutes} นาทีที่แล้ว`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} ชั่วโมงที่แล้ว`;
+  const days = Math.floor(hours / 24);
+  return `${days} วันที่แล้ว`;
 }
 
-function formatDate(date: string) {
-  return new Date(date).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
+const thaiMonthsAbbr = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+
+function formatShortThaiDate(date: string) {
+  const d = new Date(date);
+  const yearBE2 = (d.getFullYear() + 543) % 100;
+  return `${thaiMonthsAbbr[d.getMonth()]} ${String(yearBE2).padStart(2, "0")}`;
+}
+
+function monthsSpan(startDate: string, endDate: string) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  let months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+  if (end.getDate() >= start.getDate()) months += 1;
+  return Math.max(1, months);
 }
 
 function formatDuration(review: Review) {
-  return `${formatDate(review.startDate)} - ${formatDate(review.endDate)}`;
+  const months = monthsSpan(review.startDate, review.endDate);
+  const start = formatShortThaiDate(review.startDate);
+  const end = formatShortThaiDate(review.endDate);
+  const range = start === end ? start : `${start} - ${end}`;
+  return `${range} (${months} เดือน)`;
 }
 
 function formatCompensation(review: Review) {
@@ -49,16 +72,24 @@ export function ReviewCard({
   review,
   company,
   readMoreHref,
+  onDeleted,
+  showOwnerActions = false,
 }: {
   review: Review;
   company?: Company;
   readMoreHref?: string;
+  onDeleted?: (reviewId: string) => void;
+
+  showOwnerActions?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [likeCount, setLikeCount] = useState(review.likeCount);
   const [likedByMe, setLikedByMe] = useState(review.likedByMe);
   const [liking, setLiking] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const router = useRouter();
+  const showToast = useToast();
+  const confirm = useConfirm();
 
   const reviewerName = review.anonymous ? "ไม่ระบุตัวตน" : (review.reviewer.username ?? "ไม่ระบุตัวตน");
   const compensationText = formatCompensation(review);
@@ -80,8 +111,30 @@ export function ReviewCard({
     } catch {
       setLikedByMe(previousLiked);
       setLikeCount(previousCount);
+      showToast("กดถูกใจไม่สำเร็จ กรุณาลองใหม่อีกครั้ง", "error");
     } finally {
       setLiking(false);
+    }
+  }
+
+  async function handleDelete(event: React.MouseEvent) {
+    event.stopPropagation();
+    if (deleting) return;
+
+    const confirmed = await confirm("ต้องการลบรีวิวนี้ใช่หรือไม่? ไม่สามารถกู้คืนได้", {
+      confirmLabel: "ลบรีวิว",
+      cancelLabel: "ยกเลิก",
+    });
+    if (!confirmed) return;
+
+    setDeleting(true);
+    try {
+      await deleteReview(review.id);
+      showToast("ลบรีวิวเรียบร้อยแล้ว");
+      onDeleted?.(review.id);
+    } catch {
+      setDeleting(false);
+      showToast("ลบรีวิวไม่สำเร็จ กรุณาลองใหม่อีกครั้ง", "error");
     }
   }
 
@@ -93,34 +146,66 @@ export function ReviewCard({
         if (target.closest("a, button")) return;
         router.push(readMoreHref);
       }}
-      className={`grid gap-[18px] rounded-2xl border border-zinc-200 bg-white p-5 pb-[22px] text-zinc-900 transition hover:-translate-y-0.5 hover:shadow-lift active:scale-[0.99] active:translate-y-0 ${
+      className={`grid overflow-hidden rounded-2xl border border-zinc-200 bg-white text-zinc-900 transition hover:-translate-y-0.5 hover:shadow-lift active:scale-[0.99] active:translate-y-0 ${
         readMoreHref ? "cursor-pointer" : ""
       }`}
     >
-      {company && (
-        <Link
-          href={`/company/${company.slug}`}
-          className="-mb-1 flex items-center gap-2.5 text-zinc-900 no-underline"
-        >
-          <CompanyLogo logoUrl={company.logoUrl} alt={company.name} size={28} />
-          <span className="text-sm font-semibold">{company.name}</span>
-        </Link>
+      {(company || (review.canEdit && showOwnerActions)) && (
+        <div className="flex items-center justify-between gap-3 border-b border-zinc-100 bg-zinc-50 px-5 py-2">
+          {company ? (
+            <Link
+              href={`/company/${company.slug}`}
+              className="flex min-w-0 items-center gap-2.5 text-zinc-900 no-underline"
+            >
+              <CompanyLogo logoUrl={company.logoUrl} alt={company.name} size={24} />
+              <span className="truncate text-sm font-semibold">{company.name}</span>
+            </Link>
+          ) : (
+            <span />
+          )}
+          {review.canEdit && showOwnerActions && (
+            <div className="flex shrink-0 items-center gap-3">
+              <Link
+                href={`/review/${review.id}/edit`}
+                className="whitespace-nowrap text-sm font-semibold text-internia-primary no-underline transition hover:text-internia-primaryDark"
+              >
+                แก้ไข
+              </Link>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="whitespace-nowrap text-sm font-semibold text-zinc-500 transition hover:text-internia-primary disabled:opacity-60"
+              >
+                ลบ
+              </button>
+            </div>
+          )}
+        </div>
       )}
-      <div className="grid grid-cols-[48px_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1">
-        <FaceIcon score={scoreToFace(review.experienceScore)} className="row-span-2 h-10 w-10 rounded-xl" />
-        <h2 className="m-0 min-w-0 text-md font-bold leading-tight">{reviewerName}</h2>
-        <span className="whitespace-nowrap text-right text-sm leading-tight text-zinc-500">{daysAgo(review.createdAt)} วันที่แล้ว</span>
-        {!review.anonymous && review.reviewer.department && (
-          <p className="m-0 min-w-0 text-sm leading-tight text-zinc-500">{review.reviewer.department}</p>
-        )}
-        {review.canEdit && (
-          <Link
-            href={`/review/${review.id}/edit`}
-            className="col-start-3 justify-self-end text-sm font-semibold text-internia-primary no-underline transition hover:text-internia-primaryDark"
+      <div className="grid gap-[18px] p-5 pb-[22px]">
+      <div className="flex items-start gap-3">
+        <FaceIcon score={scoreToFace(review.experienceScore)} className="h-10 w-10 shrink-0 rounded-xl" />
+        <div className="grid min-w-0 flex-1 gap-1">
+          <h2 className="m-0 min-w-0 text-md font-bold leading-tight">{reviewerName}</h2>
+          {!review.anonymous && review.reviewer.department && (
+            <p className="m-0 min-w-0 text-sm leading-tight text-zinc-500">{review.reviewer.department}</p>
+          )}
+        </div>
+        <div className="grid shrink-0 justify-items-end gap-1.5">
+          <span className="whitespace-nowrap text-sm leading-tight text-zinc-500">{formatRelativeTime(review.createdAt)}</span>
+          <button
+            type="button"
+            onClick={toggleLike}
+            disabled={liking}
+            className={`inline-flex min-w-0 items-center gap-1.5 text-sm font-normal leading-tight transition disabled:opacity-60 ${
+              likedByMe ? "text-internia-primary" : "text-zinc-500 hover:text-internia-primary"
+            }`}
           >
-            แก้ไข
-          </Link>
-        )}
+            <HeartIcon filled={likedByMe} className="h-[18px] w-[18px] shrink-0" />
+            <span className="whitespace-nowrap">{likeCount}</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:flex sm:flex-wrap sm:items-center sm:gap-x-5">
@@ -130,38 +215,26 @@ export function ReviewCard({
             <span className="whitespace-nowrap">{label}</span>
           </div>
         ))}
-        <button
-          type="button"
-          onClick={toggleLike}
-          disabled={liking}
-          className={`inline-flex min-w-0 items-center gap-1.5 text-sm font-normal leading-tight transition disabled:opacity-60 ${
-            likedByMe ? "text-internia-primary" : "text-zinc-500 hover:text-internia-primary"
-          }`}
-        >
-          <HeartIcon filled={likedByMe} className="h-[18px] w-[18px] shrink-0" />
-          <span className="whitespace-nowrap">{likeCount}</span>
-        </button>
       </div>
 
       <div className="grid gap-3 pt-0.5">
         <h3 className="m-0 text-lg font-bold leading-tight">{review.position}</h3>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-xl bg-zinc-50 p-3 sm:grid-cols-3">
-          {[
-            { icon: <ClockIcon />, text: formatDuration(review) },
-            { icon: <WorkModeIcon />, text: review.workMode },
-            compensationText ? { icon: <CoinIcon />, text: compensationText } : null,
-            openYearsText ? { icon: <GraduationIcon />, text: `รับ${openYearsText}` } : null,
-            review.hasMinGpa && review.minGpa != null ? { icon: <GpaIcon />, text: `เกรดเฉลี่ยขั้นต่ำ ${review.minGpa.toFixed(2)}` } : null,
-          ]
-            .filter((fact): fact is { icon: React.ReactElement; text: string } => fact !== null)
-            .map((fact) => (
-              <div key={fact.text} className="flex min-w-0 items-center gap-2 text-sm leading-tight text-zinc-600">
-                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white text-zinc-400 ring-1 ring-zinc-200">
-                  {fact.icon}
-                </span>
-                <span className="truncate">{fact.text}</span>
-              </div>
-            ))}
+        <div className="grid gap-2 rounded-xl bg-zinc-50 p-3">
+          <FactRow items={[{ icon: <ClockIcon />, text: formatDuration(review) }]} />
+          <FactRow
+            items={[
+              { icon: <WorkModeIcon />, text: review.workMode },
+              compensationText ? { icon: <CoinIcon />, text: compensationText } : null,
+            ]}
+          />
+          <FactRow
+            items={[
+              openYearsText ? { icon: <GraduationIcon />, text: `รับ${openYearsText}` } : null,
+              review.hasMinGpa && review.minGpa != null
+                ? { icon: <GpaIcon />, text: `เกรดเฉลี่ยขั้นต่ำ ${review.minGpa.toFixed(2)}` }
+                : null,
+            ]}
+          />
         </div>
       </div>
 
@@ -203,7 +276,26 @@ export function ReviewCard({
           </button>
         )}
       </div>
+      </div>
     </article>
+  );
+}
+
+function FactRow({ items }: { items: ({ icon: React.ReactElement; text: string } | null)[] }) {
+  const facts = items.filter((item): item is { icon: React.ReactElement; text: string } => item !== null);
+  if (facts.length === 0) return null;
+
+  return (
+    <div className={facts.length > 1 ? "grid grid-cols-2 gap-x-3 gap-y-2" : "grid"}>
+      {facts.map((fact) => (
+        <div key={fact.text} className="flex min-w-0 items-center gap-2 text-sm leading-tight text-zinc-600">
+          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white text-zinc-400 ring-1 ring-zinc-200">
+            {fact.icon}
+          </span>
+          <span className="truncate">{fact.text}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 

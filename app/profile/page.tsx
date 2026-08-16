@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { CardSkeleton } from "@/components/CardSkeleton";
 import { CustomSelect } from "@/components/CustomSelect";
+import { useToast } from "@/components/Notifications";
 import { ReviewCard } from "@/components/ReviewCard";
+import { getCompany } from "@/lib/api/companies";
 import { getMe, logout, updateProfile } from "@/lib/api/auth";
 import { listMyReviews } from "@/lib/api/reviews";
 import { ApiError } from "@/lib/api/types";
-import type { Review, User } from "@/lib/api/types";
+import type { Company, Review, User } from "@/lib/api/types";
 import { clearSession } from "@/lib/auth-storage";
 import { departments } from "@/lib/departments";
 
@@ -15,29 +18,44 @@ const departmentOptions = departments.map((department) => ({ value: department, 
 
 export default function ProfilePage() {
   const router = useRouter();
+  const showToast = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [companiesBySlug, setCompaniesBySlug] = useState<Record<string, Company>>({});
+  const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
   const [username, setUsername] = useState("");
   const [department, setDepartment] = useState("");
   const [usernameError, setUsernameError] = useState<string | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     Promise.all([getMe(), listMyReviews()])
-      .then(([fetchedUser, reviewsRes]) => {
+      .then(async ([fetchedUser, reviewsRes]) => {
         if (cancelled) return;
         setUser(fetchedUser);
         setUsername(fetchedUser.username ?? "");
         setDepartment(fetchedUser.department ?? "");
         setReviews(reviewsRes.reviews);
+
+        const slugs = Array.from(new Set(reviewsRes.reviews.map((review) => review.companySlug)));
+        const companies = await Promise.all(
+          slugs.map((slug) => getCompany(slug).catch(() => null)),
+        );
+        if (cancelled) return;
+        const bySlug: Record<string, Company> = {};
+        for (const company of companies) {
+          if (company) bySlug[company.slug] = company;
+        }
+        setCompaniesBySlug(bySlug);
       })
       .catch(() => {
         if (!cancelled) setLoadError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
@@ -47,8 +65,6 @@ export default function ProfilePage() {
   async function handleSave(event: React.FormEvent) {
     event.preventDefault();
     setUsernameError(null);
-    setSaveError(null);
-    setSaved(false);
 
     if (!username.trim()) {
       setUsernameError("กรุณากรอกชื่อผู้ใช้");
@@ -59,12 +75,12 @@ export default function ProfilePage() {
     try {
       const updated = await updateProfile({ username: username.trim(), department });
       setUser(updated);
-      setSaved(true);
+      showToast("บันทึกข้อมูลเรียบร้อยแล้ว");
     } catch (err) {
       if (err instanceof ApiError && err.fields?.username) {
         setUsernameError("ชื่อผู้ใช้นี้ถูกใช้แล้ว");
       } else {
-        setSaveError("บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+        showToast("บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง", "error");
       }
     } finally {
       setSaving(false);
@@ -74,10 +90,7 @@ export default function ProfilePage() {
   async function handleLogout() {
     try {
       await logout();
-    } catch {
-      // stateless tokens — logging out client-side still works even if
-      // this call fails (e.g. network issue).
-    }
+    } catch {}
     clearSession();
     router.replace("/login");
   }
@@ -86,6 +99,27 @@ export default function ProfilePage() {
     return (
       <main className="mx-auto w-[min(100%-40px,760px)] py-12 text-center">
         <p className="text-sm text-internia-primary">โหลดข้อมูลไม่สำเร็จ กรุณาลองรีเฟรชหน้าใหม่</p>
+      </main>
+    );
+  }
+
+  if (loading) {
+    return (
+      <main className="mx-auto w-[min(100%-40px,760px)] pt-5 pb-12 md:pt-8 md:pb-16">
+        <div className="grid gap-8">
+          <div className="animate-pulse rounded-3xl border border-zinc-200 bg-white p-6 md:p-8">
+            <div className="grid gap-4">
+              <div className="h-7 w-32 rounded bg-zinc-200" />
+              <div className="h-11 rounded-full bg-zinc-100" />
+              <div className="h-11 rounded-full bg-zinc-100" />
+              <div className="h-11 rounded-full bg-zinc-100" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4">
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+        </div>
       </main>
     );
   }
@@ -121,9 +155,6 @@ export default function ProfilePage() {
                 <CustomSelect value={department} onChange={setDepartment} placeholder="เลือกภาควิชา" options={departmentOptions} />
               </label>
 
-              {saveError && <p className="m-0 text-sm text-internia-primary">{saveError}</p>}
-              {saved && <p className="m-0 text-sm text-green-600">บันทึกข้อมูลเรียบร้อย</p>}
-
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -154,7 +185,13 @@ export default function ProfilePage() {
           ) : (
             <div className="grid grid-cols-1 gap-4">
               {reviews.map((review) => (
-                <ReviewCard key={review.id} review={review} />
+                <ReviewCard
+                  key={review.id}
+                  review={review}
+                  company={companiesBySlug[review.companySlug]}
+                  showOwnerActions
+                  onDeleted={(deletedId) => setReviews((current) => current.filter((r) => r.id !== deletedId))}
+                />
               ))}
             </div>
           )}
