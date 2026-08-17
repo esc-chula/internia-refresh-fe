@@ -31,3 +31,15 @@ export function createCompany(data: { name: string; category: string; logo?: Fil
   if (data.logo) form.set("logo", data.logo);
   return apiFetchForm<Company>("/companies", form);
 }
+
+export function updateCompany(slug: string, data: { name: string; category: string; logo?: File | null }) {
+  const form = new FormData();
+  form.set("name", data.name);
+  form.set("category", data.category);
+  if (data.logo) form.set("logo", data.logo);
+  return apiFetchForm<Company>(`/companies/${encodeURIComponent(slug)}`, form, "PATCH");
+}
+
+export function deleteCompany(slug: string) {
+  return apiFetch<{ ok: boolean }>(`/companies/${encodeURIComponent(slug)}`, { method: "DELETE", auth: true });
+}

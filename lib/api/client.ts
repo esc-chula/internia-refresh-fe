@@ -89,12 +89,12 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   return handleResponse<T>(response);
 }
 
-export async function apiFetchForm<T>(path: string, form: FormData): Promise<T> {
+export async function apiFetchForm<T>(path: string, form: FormData, method: "POST" | "PATCH" = "POST"): Promise<T> {
   const headers: Record<string, string> = {};
   const token = getAccessToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const response = await doRequest(`${API_BASE}${path}`, { method: "POST", headers, body: form }, true);
+  const response = await doRequest(`${API_BASE}${path}`, { method, headers, body: form }, true);
 
   return handleResponse<T>(response);
 }

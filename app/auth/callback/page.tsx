@@ -23,7 +23,7 @@ export default function AuthCallbackPage() {
 
     getMe()
       .then((user) => {
-        setSession(accessToken, refreshToken, user.onboarded);
+        setSession(accessToken, refreshToken, user.onboarded, user.role === "admin");
         router.replace(user.onboarded ? "/" : "/onboarding");
       })
       .catch(() => setError(true));

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Company, Review } from "@/lib/api/types";
 import { deleteReview, likeReview, unlikeReview } from "@/lib/api/reviews";
+import { shortDepartmentLabel } from "@/lib/departments";
 import { CompanyLogo } from "./CompanyLogo";
 import { useConfirm, useToast } from "./Notifications";
 import { FaceIcon, scoreToFace } from "./FaceIcon";
@@ -188,8 +189,12 @@ export function ReviewCard({
         <FaceIcon score={scoreToFace(review.experienceScore)} className="h-10 w-10 shrink-0 rounded-xl" />
         <div className="grid min-w-0 flex-1 gap-1">
           <h2 className="m-0 min-w-0 text-md font-bold leading-tight">{reviewerName}</h2>
-          {!review.anonymous && review.reviewer.department && (
-            <p className="m-0 min-w-0 text-sm leading-tight text-zinc-500">{review.reviewer.department}</p>
+          {!review.anonymous && (review.reviewer.department || review.reviewer.batch) && (
+            <p className="m-0 min-w-0 text-sm leading-tight text-zinc-500">
+              {[review.reviewer.department ? shortDepartmentLabel(review.reviewer.department) : null, review.reviewer.batch]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
           )}
         </div>
         <div className="grid shrink-0 justify-items-end gap-1.5">

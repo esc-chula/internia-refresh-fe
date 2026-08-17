@@ -9,23 +9,9 @@ import { createCompany, listCompanies } from "@/lib/api/companies";
 import { createReview, updateReview } from "@/lib/api/reviews";
 import { ApiError } from "@/lib/api/types";
 import type { Company, Review, ReviewPayload, WorkMode } from "@/lib/api/types";
+import { companyTypes } from "@/lib/company-types";
 
 const FETCH_ALL_LIMIT = 300;
-
-const companyTypes = [
-  "Banking, Finance & Investment",
-  "Computer Systems, IT & Communications Technology",
-  "Manufacturing, Logistics & Industrial",
-  "Research, Academia & Government Agencies",
-  "Mining & Geology",
-  "Energy & Sustainability",
-  "Construction",
-  "Consulting & Strategy",
-  "Entrepreneurship & Startups",
-  "Automotive & Mobility",
-  "Chemical & Process Industry",
-  "Other",
-];
 
 const companyTypeOptions = companyTypes.map((option) => ({ value: option, label: option }));
 const workModeOptions = ["Work from home", "Hybrid", "Onsite"].map((option) => ({ value: option, label: option }));

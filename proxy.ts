@@ -6,8 +6,10 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isAuthenticated = Boolean(request.cookies.get("internia_token")?.value);
   const isOnboarded = request.cookies.get("internia_onboarded")?.value === "1";
+  const isAdmin = request.cookies.get("internia_is_admin")?.value === "1";
   const isPublicPath = PUBLIC_PATHS.includes(pathname);
   const isOnboardingPath = pathname === "/onboarding";
+  const isAdminPath = pathname === "/admin" || pathname.startsWith("/admin/");
 
   if (!isAuthenticated) {
     if (isPublicPath) return NextResponse.next();
@@ -22,6 +24,10 @@ export function proxy(request: NextRequest) {
   }
 
   if (isOnboardingPath || isPublicPath) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  if (isAdminPath && !isAdmin) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 

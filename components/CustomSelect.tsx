@@ -31,13 +31,13 @@ export function CustomSelect({
   }, [open]);
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className="relative min-w-0">
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
         className="flex h-10 w-full items-center justify-between gap-2 rounded-full border border-zinc-300 bg-white pl-4 pr-3 text-sm text-zinc-700 outline-none transition hover:border-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-internia-primary/10 active:scale-[0.98]"
       >
-        <span className={`whitespace-nowrap ${!selected && placeholder ? "text-zinc-400" : ""}`}>
+        <span className={`min-w-0 truncate ${!selected && placeholder ? "text-zinc-400" : ""}`}>
           {selected?.label ?? placeholder ?? ""}
         </span>
         <svg
@@ -57,7 +57,7 @@ export function CustomSelect({
       </button>
 
       {open && (
-        <div className="animate-dropdown-in absolute left-0 top-[calc(100%+8px)] z-20 max-h-72 min-w-full overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-1.5 shadow-lift">
+        <div className="animate-dropdown-in absolute left-0 top-[calc(100%+8px)] z-20 max-h-72 w-max max-w-[min(90vw,320px)] min-w-full overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-1.5 shadow-lift">
           {options.map((option) => (
             <button
               key={option.value}
@@ -66,7 +66,7 @@ export function CustomSelect({
                 onChange(option.value);
                 setOpen(false);
               }}
-              className={`block w-full whitespace-nowrap rounded-full px-4 py-2 text-left text-sm transition hover:bg-zinc-100 ${
+              className={`block w-full truncate rounded-full px-4 py-2 text-left text-sm transition hover:bg-zinc-100 ${
                 option.value === value ? "font-semibold text-internia-primary" : "text-zinc-700"
               }`}
             >

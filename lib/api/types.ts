@@ -1,9 +1,19 @@
+export type Role = "user" | "admin";
+
 export type User = {
   id: string;
   email: string;
   username: string | null;
   department: string | null;
+  role: Role;
   onboarded: boolean;
+};
+
+export type AdminUserListResponse = {
+  users: User[];
+  total: number;
+  page: number;
+  limit: number;
 };
 
 export type CompanyScores = {
@@ -34,6 +44,7 @@ export type CompanyListResponse = {
 export type Reviewer = {
   username: string | null;
   department: string | null;
+  batch: string | null;
 };
 
 export type WorkMode = "Work from home" | "Hybrid" | "Onsite";
@@ -72,6 +83,18 @@ export type Review = {
 
 export type ReviewListResponse = {
   reviews: Review[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
+export type AdminReview = Review & {
+  reviewerEmail: string | null;
+  companyName: string;
+};
+
+export type AdminReviewListResponse = {
+  reviews: AdminReview[];
   total: number;
   page: number;
   limit: number;

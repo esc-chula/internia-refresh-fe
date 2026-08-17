@@ -14,6 +14,7 @@ import { SearchBox } from "./SearchBox";
 import { listCompanies } from "@/lib/api/companies";
 import { listReviews } from "@/lib/api/reviews";
 import { departments } from "@/lib/departments";
+import { companyTypes } from "@/lib/company-types";
 import type { Company, Review } from "@/lib/api/types";
 
 type Mode = "company" | "review";
@@ -25,24 +26,7 @@ const PAGE_SIZE = 15;
 
 const FETCH_ALL_LIMIT = 300;
 
-const TAG_OPTIONS = [
-  "Tech",
-  "AI / Data",
-  "FinTech",
-  "Banking",
-  "E-com",
-  "Logistics",
-  "Consulting",
-  "Telecom",
-  "Retail",
-  "Travel",
-  "Healthcare",
-  "Manufacturing",
-  "Energy",
-  "Education",
-  "Media",
-  "Real Estate",
-];
+const TAG_OPTIONS = companyTypes;
 
 const tagSelectOptions = TAG_OPTIONS.map((option) => ({ value: option, label: option }));
 
