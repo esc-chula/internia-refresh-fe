@@ -66,7 +66,7 @@ export default function OnboardingPage() {
           <input
             value={username}
             onChange={(event) => setUsername(event.target.value)}
-            placeholder="เช่น pim"
+            placeholder="เช่น tanny"
             maxLength={32}
             className="h-11 w-full rounded-full border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-4 focus:ring-internia-primary/10"
           />

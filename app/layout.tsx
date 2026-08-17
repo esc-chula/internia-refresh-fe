@@ -25,6 +25,9 @@ const notoSansThaiLooped = Noto_Sans_Thai_Looped({
 export const metadata: Metadata = {
   title: "Internia",
   description: "Internship reviews by Intania students",
+  icons: {
+    icon: "/esc.png",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
