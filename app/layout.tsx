@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   title: "Internia",
   description: "Internship reviews by Intania students",
   icons: {
-    icon: "/esc.png",
+    icon: "/favicon.png",
   },
 };
 
