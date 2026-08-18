@@ -55,3 +55,7 @@ export function unlikeReview(reviewId: string) {
 export function listMyReviews() {
   return apiFetch<ReviewListResponse>("/me/reviews", { auth: true });
 }
+
+export function listLikedReviews() {
+  return apiFetch<ReviewListResponse>("/me/liked-reviews", { auth: true });
+}

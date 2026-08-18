@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Fuse from "fuse.js";
 import { useSearchParams } from "next/navigation";
 import { CustomSelect } from "./CustomSelect";
 import { MultiSelect } from "./MultiSelect";
 import { SearchBox } from "./SearchBox";
 import { ReviewCard } from "./ReviewCard";
+import { listCompanyReviews } from "@/lib/api/reviews";
+import { getAccessToken } from "@/lib/auth-storage";
 import type { Review } from "@/lib/api/types";
 
 type Sort = "newest" | "experience";
@@ -45,7 +47,20 @@ function matchesMinGpaFilter(review: Review, gpas: string[]) {
   return gpas.some((gpa) => review.minGpa! <= Number(gpa));
 }
 
-export function CompanyReviewsExplore({ reviews }: { reviews: Review[] }) {
+export function CompanyReviewsExplore({ slug, reviews: initialReviews }: { slug: string; reviews: Review[] }) {
+  const [reviews, setReviews] = useState(initialReviews);
+
+  useEffect(() => {
+    setReviews(initialReviews);
+  }, [initialReviews]);
+
+  useEffect(() => {
+    if (!getAccessToken()) return;
+    listCompanyReviews(slug, { limit: 100 })
+      .then((res) => setReviews(res.reviews))
+      .catch(() => {});
+  }, [slug]);
+
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("position") ?? "");
   const [draft, setDraft] = useState(searchParams.get("position") ?? "");
@@ -133,7 +148,7 @@ export function CompanyReviewsExplore({ reviews }: { reviews: Review[] }) {
 
       {filtered.map((review, index) => (
         <div key={review.id} className="animate-fade-in-up" style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}>
-          <ReviewCard review={review} />
+          <ReviewCard review={review} onDeleted={(id) => setReviews((current) => current.filter((r) => r.id !== id))} />
         </div>
       ))}
 

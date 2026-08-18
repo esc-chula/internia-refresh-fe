@@ -35,7 +35,7 @@ export default async function CompanyPage({ params }: CompanyPageProps) {
         <BackLink href="/" label="กลับไปหน้าหลัก" />
         <CompanyProfileCard company={company} />
         <Suspense>
-          <CompanyReviewsExplore reviews={reviewsData.reviews} />
+          <CompanyReviewsExplore slug={slug} reviews={reviewsData.reviews} />
         </Suspense>
       </div>
     </main>

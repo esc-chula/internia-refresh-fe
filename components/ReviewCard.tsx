@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Company, Review } from "@/lib/api/types";
@@ -74,12 +74,14 @@ export function ReviewCard({
   company,
   readMoreHref,
   onDeleted,
+  onLikeChange,
   showOwnerActions = false,
 }: {
   review: Review;
   company?: Company;
   readMoreHref?: string;
   onDeleted?: (reviewId: string) => void;
+  onLikeChange?: (review: Review, liked: boolean, likeCount: number) => void;
 
   showOwnerActions?: boolean;
 }) {
@@ -88,6 +90,11 @@ export function ReviewCard({
   const [likedByMe, setLikedByMe] = useState(review.likedByMe);
   const [liking, setLiking] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    setLikeCount(review.likeCount);
+    setLikedByMe(review.likedByMe);
+  }, [review.likeCount, review.likedByMe]);
   const router = useRouter();
   const showToast = useToast();
   const confirm = useConfirm();
@@ -103,12 +110,14 @@ export function ReviewCard({
     const previousCount = likeCount;
     const previousLiked = likedByMe;
     const nextLiked = !likedByMe;
+    const nextCount = previousCount + (nextLiked ? 1 : -1);
 
     setLikedByMe(nextLiked);
-    setLikeCount((count) => count + (nextLiked ? 1 : -1));
+    setLikeCount(nextCount);
     setLiking(true);
     try {
       await (nextLiked ? likeReview(review.id) : unlikeReview(review.id));
+      onLikeChange?.(review, nextLiked, nextCount);
     } catch {
       setLikedByMe(previousLiked);
       setLikeCount(previousCount);

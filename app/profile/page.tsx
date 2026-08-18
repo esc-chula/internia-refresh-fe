@@ -8,7 +8,7 @@ import { useToast } from "@/components/Notifications";
 import { ReviewCard } from "@/components/ReviewCard";
 import { getCompany } from "@/lib/api/companies";
 import { getMe, logout, updateProfile } from "@/lib/api/auth";
-import { listMyReviews } from "@/lib/api/reviews";
+import { listLikedReviews, listMyReviews } from "@/lib/api/reviews";
 import { ApiError } from "@/lib/api/types";
 import type { Company, Review, User } from "@/lib/api/types";
 import { clearSession } from "@/lib/auth-storage";
@@ -21,6 +21,7 @@ export default function ProfilePage() {
   const showToast = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [likedReviews, setLikedReviews] = useState<Review[]>([]);
   const [companiesBySlug, setCompaniesBySlug] = useState<Record<string, Company>>({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -32,15 +33,18 @@ export default function ProfilePage() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([getMe(), listMyReviews()])
-      .then(async ([fetchedUser, reviewsRes]) => {
+    Promise.all([getMe(), listMyReviews(), listLikedReviews()])
+      .then(async ([fetchedUser, reviewsRes, likedRes]) => {
         if (cancelled) return;
         setUser(fetchedUser);
         setUsername(fetchedUser.username ?? "");
         setDepartment(fetchedUser.department ?? "");
         setReviews(reviewsRes.reviews);
+        setLikedReviews(likedRes.reviews);
 
-        const slugs = Array.from(new Set(reviewsRes.reviews.map((review) => review.companySlug)));
+        const slugs = Array.from(
+          new Set([...reviewsRes.reviews, ...likedRes.reviews].map((review) => review.companySlug)),
+        );
         const companies = await Promise.all(
           slugs.map((slug) => getCompany(slug).catch(() => null)),
         );
@@ -85,6 +89,18 @@ export default function ProfilePage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function handleLikeChange(review: Review, liked: boolean, likeCount: number) {
+    const patch = (list: Review[]) => list.map((r) => (r.id === review.id ? { ...r, likedByMe: liked, likeCount } : r));
+
+    setReviews(patch);
+    setLikedReviews((current) => {
+      const patched = patch(current);
+      if (!liked) return patched.filter((r) => r.id !== review.id);
+      if (patched.some((r) => r.id === review.id)) return patched;
+      return [{ ...review, likedByMe: liked, likeCount }, ...patched];
+    });
   }
 
   async function handleLogout() {
@@ -191,6 +207,30 @@ export default function ProfilePage() {
                   company={companiesBySlug[review.companySlug]}
                   showOwnerActions
                   onDeleted={(deletedId) => setReviews((current) => current.filter((r) => r.id !== deletedId))}
+                  onLikeChange={handleLikeChange}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="grid gap-4">
+          <h2 className="m-0 text-xl font-extrabold tracking-[-0.01em] text-zinc-900">รีวิวที่ถูกใจ ({likedReviews.length})</h2>
+
+          {likedReviews.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-zinc-200 py-12 text-center text-sm text-zinc-400">
+              คุณยังไม่ได้กดถูกใจรีวิวใดเลย
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {likedReviews.map((review) => (
+                <ReviewCard
+                  key={review.id}
+                  review={review}
+                  company={companiesBySlug[review.companySlug]}
+                  showOwnerActions
+                  onDeleted={(deletedId) => setLikedReviews((current) => current.filter((r) => r.id !== deletedId))}
+                  onLikeChange={handleLikeChange}
                 />
               ))}
             </div>
