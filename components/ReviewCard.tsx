@@ -306,7 +306,7 @@ function FactRow({ items }: { items: ({ icon: React.ReactElement; text: string }
           <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white text-zinc-400 ring-1 ring-zinc-200">
             {fact.icon}
           </span>
-          <span className="truncate">{fact.text}</span>
+          <span className="min-w-0 truncate">{fact.text}</span>
         </div>
       ))}
     </div>
@@ -332,7 +332,7 @@ function ReviewSection({
         </span>
         {title}
       </h4>
-      <p className="m-0 whitespace-pre-wrap font-normal">{clamp ? `${text.slice(0, 170)} ...` : text}</p>
+      <p className="m-0 whitespace-pre-wrap break-words font-normal">{clamp ? `${text.slice(0, 170)} ...` : text}</p>
     </section>
   );
 }

@@ -503,7 +503,7 @@ export function CreateReviewForm({
                       <path d="M12 16V4m0 0 4 4m-4-4-4 4" />
                       <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
                     </svg>
-                    <span className="truncate">{logoFile ? logoFile.name : "อัปโหลดโลโก้บริษัท"}</span>
+                    <span className="min-w-0 truncate">{logoFile ? logoFile.name : "อัปโหลดโลโก้บริษัท"}</span>
                     <input
                       type="file"
                       accept="image/*"

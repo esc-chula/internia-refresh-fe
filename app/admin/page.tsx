@@ -35,8 +35,8 @@ function groupCounts(labels: (string | null)[]): { label: string; count: number 
 function BreakdownCard({ title, items }: { title: string; items: { label: string; count: number }[] }) {
   const max = items.reduce((m, item) => Math.max(m, item.count), 0);
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-      <div className="mb-3 text-sm font-semibold text-zinc-900">{title}</div>
+    <div className="min-w-0 rounded-2xl border border-zinc-200 bg-white p-4">
+      <div className="mb-3 truncate text-sm font-semibold text-zinc-900">{title}</div>
       {items.length === 0 ? (
         <p className="m-0 text-sm text-zinc-400">ไม่มีข้อมูล</p>
       ) : (
@@ -44,7 +44,7 @@ function BreakdownCard({ title, items }: { title: string; items: { label: string
           {items.map((item) => (
             <div key={item.label} className="grid gap-1">
               <div className="flex items-center justify-between text-xs text-zinc-600">
-                <span className="truncate">{item.label}</span>
+                <span className="min-w-0 truncate">{item.label}</span>
                 <span className="shrink-0 font-semibold text-zinc-900">{item.count}</span>
               </div>
               <div className="h-1.5 overflow-hidden rounded-full bg-zinc-100">
@@ -278,9 +278,9 @@ export default function AdminPage() {
             ["ผู้ใช้", stats.users],
             ["แอดมิน", stats.admins],
           ].map(([label, value]) => (
-            <div key={label as string} className="rounded-2xl border border-zinc-200 bg-white p-4">
-              <div className="text-2xl font-extrabold text-zinc-900">{loading ? "-" : value}</div>
-              <div className="text-sm text-zinc-500">{label}</div>
+            <div key={label as string} className="min-w-0 rounded-2xl border border-zinc-200 bg-white p-4">
+              <div className="truncate text-2xl font-extrabold text-zinc-900">{loading ? "-" : value}</div>
+              <div className="truncate text-sm text-zinc-500">{label}</div>
             </div>
           ))}
         </div>
@@ -294,25 +294,25 @@ export default function AdminPage() {
           </div>
         )}
 
-        <div className="flex gap-2 border-b border-zinc-200">
+        <div className="flex gap-1 overflow-x-auto border-b border-zinc-200 sm:gap-2">
           <button
             type="button"
             onClick={() => setTab("companies")}
-            className={`px-4 py-2.5 text-sm font-semibold ${tab === "companies" ? "border-b-2 border-zinc-900 text-zinc-900" : "text-zinc-500"}`}
+            className={`shrink-0 whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold sm:px-4 sm:text-sm ${tab === "companies" ? "border-b-2 border-zinc-900 text-zinc-900" : "text-zinc-500"}`}
           >
             จัดการบริษัท
           </button>
           <button
             type="button"
             onClick={() => setTab("reviews")}
-            className={`px-4 py-2.5 text-sm font-semibold ${tab === "reviews" ? "border-b-2 border-zinc-900 text-zinc-900" : "text-zinc-500"}`}
+            className={`shrink-0 whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold sm:px-4 sm:text-sm ${tab === "reviews" ? "border-b-2 border-zinc-900 text-zinc-900" : "text-zinc-500"}`}
           >
             จัดการรีวิว
           </button>
           <button
             type="button"
             onClick={() => setTab("users")}
-            className={`px-4 py-2.5 text-sm font-semibold ${tab === "users" ? "border-b-2 border-zinc-900 text-zinc-900" : "text-zinc-500"}`}
+            className={`shrink-0 whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold sm:px-4 sm:text-sm ${tab === "users" ? "border-b-2 border-zinc-900 text-zinc-900" : "text-zinc-500"}`}
           >
             จัดการผู้ใช้
           </button>
@@ -337,7 +337,7 @@ export default function AdminPage() {
             )}
 
             {creating && (
-              <div className="rounded-2xl border border-zinc-200 bg-white p-4">
+              <div className="min-w-0 rounded-2xl border border-zinc-200 bg-white p-4">
                 <div className="grid gap-3">
                   <div className="grid gap-3 sm:grid-cols-2">
                     <label className="grid gap-1.5">
@@ -389,7 +389,7 @@ export default function AdminPage() {
             )}
 
             {companies.map((company) => (
-              <div key={company.slug} className="rounded-2xl border border-zinc-200 bg-white p-4">
+              <div key={company.slug} className="min-w-0 rounded-2xl border border-zinc-200 bg-white p-4">
                 {editingSlug === company.slug ? (
                   <div className="grid gap-3">
                     <div className="grid gap-3 sm:grid-cols-2">
@@ -478,7 +478,7 @@ export default function AdminPage() {
         ) : tab === "reviews" ? (
           <div className="grid gap-3">
             {reviews.map((review) => (
-              <div key={review.id} className="rounded-2xl border border-zinc-200 bg-white p-4">
+              <div key={review.id} className="min-w-0 rounded-2xl border border-zinc-200 bg-white p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="truncate font-semibold text-zinc-900">
@@ -500,9 +500,9 @@ export default function AdminPage() {
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-500">
-                  <span>{review.startDate} – {review.endDate}</span>
-                  <span>· {review.workMode}</span>
-                  <span>
+                  <span className="min-w-0 break-words">{review.startDate} – {review.endDate}</span>
+                  <span className="min-w-0 break-words">· {review.workMode}</span>
+                  <span className="min-w-0 break-words">
                     · คะแนนรวม {review.overallScore} (งาน {review.workScore} / สังคม {review.socialScore} / พี่เลี้ยง{" "}
                     {review.mentorScore} / ประสบการณ์ {review.experienceScore})
                   </span>
@@ -520,7 +520,7 @@ export default function AdminPage() {
                     .map(([label, text]) => (
                       <div key={label} className="rounded-xl bg-zinc-50 p-3">
                         <div className="mb-1 text-xs font-semibold text-zinc-500">{label}</div>
-                        <p className="m-0 whitespace-pre-wrap text-sm text-zinc-700">{text}</p>
+                        <p className="m-0 whitespace-pre-wrap break-words text-sm text-zinc-700">{text}</p>
                       </div>
                     ))}
                 </div>
@@ -536,28 +536,30 @@ export default function AdminPage() {
         ) : (
           <div className="grid gap-3">
             {users.map((user) => (
-              <div key={user.id} className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white p-4">
-                <div className="min-w-0 flex-1">
+              <div key={user.id} className="min-w-0 grid gap-3 rounded-2xl border border-zinc-200 bg-white p-4 sm:flex sm:items-center">
+                <div className="min-w-0 sm:flex-1">
                   <div className="truncate font-semibold text-zinc-900">{user.username ?? "(ยังไม่ตั้งชื่อผู้ใช้)"}</div>
                   <div className="truncate text-sm text-zinc-500">
                     {user.email} {user.department ? `· ${user.department}` : ""}
                   </div>
                 </div>
-                <span
-                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
-                    user.role === "admin" ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-600"
-                  }`}
-                >
-                  {user.role === "admin" ? "แอดมิน" : "ผู้ใช้ทั่วไป"}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleToggleRole(user)}
-                  disabled={busyUserId === user.id}
-                  className="h-9 shrink-0 rounded-full border border-zinc-300 px-3 text-sm font-semibold text-zinc-700 hover:border-zinc-400 disabled:opacity-60"
-                >
-                  {user.role === "admin" ? "ถอดสิทธิ์" : "ตั้งเป็นแอดมิน"}
-                </button>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span
+                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+                      user.role === "admin" ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-600"
+                    }`}
+                  >
+                    {user.role === "admin" ? "แอดมิน" : "ผู้ใช้ทั่วไป"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleRole(user)}
+                    disabled={busyUserId === user.id}
+                    className="h-9 shrink-0 rounded-full border border-zinc-300 px-3 text-sm font-semibold text-zinc-700 hover:border-zinc-400 disabled:opacity-60"
+                  >
+                    {user.role === "admin" ? "ถอดสิทธิ์" : "ตั้งเป็นแอดมิน"}
+                  </button>
+                </div>
               </div>
             ))}
 
