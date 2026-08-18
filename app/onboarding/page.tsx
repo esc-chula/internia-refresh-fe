@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CustomSelect } from "@/components/CustomSelect";
-import { onboard } from "@/lib/api/auth";
+import { getMe, onboard } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/types";
 import { setOnboarded } from "@/lib/auth-storage";
 import { departments } from "@/lib/departments";
@@ -17,9 +17,11 @@ export default function OnboardingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const submittingRef = useRef(false);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (submittingRef.current) return;
     setUsernameError(null);
     setFormError(null);
 
@@ -32,6 +34,7 @@ export default function OnboardingPage() {
       return;
     }
 
+    submittingRef.current = true;
     setSubmitting(true);
     try {
       await onboard(username.trim(), department);
@@ -40,10 +43,22 @@ export default function OnboardingPage() {
     } catch (err) {
       if (err instanceof ApiError && err.fields?.username) {
         setUsernameError("ชื่อผู้ใช้นี้ถูกใช้แล้ว");
+      } else if (err instanceof ApiError && err.message.includes("already onboarded")) {
+        // The account was already onboarded by an earlier in-flight submit (e.g. a
+        // fast double-click before the button visually disabled) — the user's intent
+        // was already fulfilled, so proceed as success instead of showing an error.
+        try {
+          const me = await getMe();
+          setOnboarded(me.onboarded);
+        } catch {
+          setOnboarded(true);
+        }
+        router.replace("/");
       } else {
         setFormError("บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
       }
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   }
