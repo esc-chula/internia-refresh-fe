@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { CustomSelect } from "@/components/CustomSelect";
 import { getMe, onboard } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/types";
@@ -11,7 +10,6 @@ import { departments } from "@/lib/departments";
 const departmentOptions = departments.map((department) => ({ value: department, label: department }));
 
 export default function OnboardingPage() {
-  const router = useRouter();
   const [username, setUsername] = useState("");
   const [department, setDepartment] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -39,7 +37,7 @@ export default function OnboardingPage() {
     try {
       await onboard(username.trim(), department);
       setOnboarded(true);
-      router.replace("/");
+      window.location.href = "/";
     } catch (err) {
       if (err instanceof ApiError && err.fields?.username) {
         setUsernameError("ชื่อผู้ใช้นี้ถูกใช้แล้ว");
@@ -53,7 +51,7 @@ export default function OnboardingPage() {
         } catch {
           setOnboarded(true);
         }
-        router.replace("/");
+        window.location.href = "/";
       } else {
         setFormError("บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
       }
