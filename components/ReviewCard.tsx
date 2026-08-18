@@ -332,7 +332,7 @@ function ReviewSection({
         </span>
         {title}
       </h4>
-      <p className="m-0 font-normal">{clamp ? `${text.slice(0, 170)} ...` : text}</p>
+      <p className="m-0 whitespace-pre-wrap font-normal">{clamp ? `${text.slice(0, 170)} ...` : text}</p>
     </section>
   );
 }
