@@ -34,12 +34,12 @@ export function CompanyLogo({
   }, [logoUrl]);
 
   return (
-    <div className="grid overflow-hidden bg-white" style={box}>
+    <div className="relative overflow-hidden bg-white" style={box}>
       <img
         ref={imgRef}
         src={failed ? "/unknown.png" : resolveLogoSrc(logoUrl)}
         alt={alt}
-        className="h-full w-full object-contain"
+        className="absolute inset-0 h-full w-full object-contain"
         onError={() => setFailed(true)}
       />
     </div>
