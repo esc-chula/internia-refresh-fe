@@ -130,6 +130,13 @@ export function CreateReviewForm({
   const [companyFocused, setCompanyFocused] = useState(false);
   const [companyType, setCompanyType] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const logoPreview = useMemo(() => (logoFile ? URL.createObjectURL(logoFile) : null), [logoFile]);
+
+  useEffect(() => {
+    return () => {
+      if (logoPreview) URL.revokeObjectURL(logoPreview);
+    };
+  }, [logoPreview]);
   const [knownCompanies, setKnownCompanies] = useState<Company[]>([]);
 
   const [position, setPosition] = useState(initialReview?.position ?? "");
@@ -498,19 +505,22 @@ export function CreateReviewForm({
                 </Field>
 
                 <Field label="โลโก้บริษัท">
-                  <label className="flex h-11 w-full cursor-pointer items-center gap-2.5 rounded-full border border-dashed border-zinc-300 bg-white px-4 text-sm text-zinc-500 transition hover:border-zinc-400">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-zinc-400">
-                      <path d="M12 16V4m0 0 4 4m-4-4-4 4" />
-                      <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
-                    </svg>
-                    <span className="min-w-0 truncate">{logoFile ? logoFile.name : "อัปโหลดโลโก้บริษัท"}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)}
-                    />
-                  </label>
+                  <div className="flex items-center gap-3">
+                    {logoPreview && <CompanyLogo logoUrl={logoPreview} alt="ตัวอย่างโลโก้" size={44} />}
+                    <label className="flex h-11 w-full cursor-pointer items-center gap-2.5 rounded-full border border-dashed border-zinc-300 bg-white px-4 text-sm text-zinc-500 transition hover:border-zinc-400">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-zinc-400">
+                        <path d="M12 16V4m0 0 4 4m-4-4-4 4" />
+                        <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+                      </svg>
+                      <span className="min-w-0 truncate">{logoFile ? logoFile.name : "อัปโหลดโลโก้บริษัท"}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)}
+                      />
+                    </label>
+                  </div>
                 </Field>
               </>
             )}

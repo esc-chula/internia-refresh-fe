@@ -83,6 +83,13 @@ export default function AdminPage() {
   }, [editLogoPreview]);
   const [creating, setCreating] = useState(false);
   const [createForm, setCreateForm] = useState<CompanyFormState>(emptyForm);
+  const createLogoPreview = useMemo(() => (createForm.logo ? URL.createObjectURL(createForm.logo) : null), [createForm.logo]);
+
+  useEffect(() => {
+    return () => {
+      if (createLogoPreview) URL.revokeObjectURL(createLogoPreview);
+    };
+  }, [createLogoPreview]);
   const [saving, setSaving] = useState(false);
 
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
@@ -358,14 +365,17 @@ export default function AdminPage() {
                       />
                     </label>
                   </div>
-                  <label className="grid gap-1.5">
+                  <label className="grid gap-2">
                     <span className="text-sm font-medium text-zinc-700">โลโก้ (ไม่บังคับ)</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(event) => setCreateForm((f) => ({ ...f, logo: event.target.files?.[0] ?? null }))}
-                      className="text-sm text-zinc-600"
-                    />
+                    <div className="flex items-center gap-3">
+                      {createLogoPreview && <CompanyLogo logoUrl={createLogoPreview} alt="ตัวอย่างโลโก้" size={48} />}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(event) => setCreateForm((f) => ({ ...f, logo: event.target.files?.[0] ?? null }))}
+                        className="text-sm text-zinc-600"
+                      />
+                    </div>
                   </label>
                   <div className="flex gap-2">
                     <button

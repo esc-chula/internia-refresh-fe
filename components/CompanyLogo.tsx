@@ -5,7 +5,9 @@ import { apiOrigin } from "@/lib/api/client";
 
 function resolveLogoSrc(logoUrl: string | null | undefined) {
   if (!logoUrl) return "/unknown.png";
-  if (logoUrl.startsWith("http://") || logoUrl.startsWith("https://")) return logoUrl;
+  if (logoUrl.startsWith("http://") || logoUrl.startsWith("https://") || logoUrl.startsWith("blob:") || logoUrl.startsWith("data:")) {
+    return logoUrl;
+  }
   return `${apiOrigin()}${logoUrl}`;
 }
 
