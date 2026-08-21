@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CustomSelect } from "./CustomSelect";
 import { CompanyLogo } from "./CompanyLogo";
@@ -932,11 +932,20 @@ function TextArea({
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${Math.max(el.scrollHeight, 64)}px`;
+
+    const fit = () => {
+      el.style.height = "auto";
+      el.style.height = `${Math.max(el.scrollHeight, 64)}px`;
+    };
+
+    fit();
+
+    const observer = new ResizeObserver(fit);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [value]);
 
   return (
