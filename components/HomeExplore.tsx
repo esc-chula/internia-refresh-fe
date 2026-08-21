@@ -374,7 +374,7 @@ export function HomeExplore() {
           {!loading && !loadError && mode === "company" ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {filteredCompanies.slice(0, visibleCount).map((company, index) => (
-                <div key={company.id} className="animate-fade-in-up" style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}>
+                <div key={company.id} className="min-w-0 animate-fade-in-up" style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}>
                   <CompanyCard company={company} />
                 </div>
               ))}
@@ -384,7 +384,7 @@ export function HomeExplore() {
           {!loading && !loadError && mode === "review" ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {filteredReviews.slice(0, visibleCount).map((review, index) => (
-                <div key={review.id} className="animate-fade-in-up" style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}>
+                <div key={review.id} className="min-w-0 animate-fade-in-up" style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}>
                   <ReviewCard
                     review={review}
                     company={companyBySlug.get(review.companySlug)}

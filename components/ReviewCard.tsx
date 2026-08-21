@@ -156,19 +156,19 @@ export function ReviewCard({
         if (target.closest("a, button")) return;
         router.push(readMoreHref);
       }}
-      className={`grid overflow-hidden rounded-2xl border border-zinc-200 bg-white text-zinc-900 transition hover:-translate-y-0.5 hover:shadow-lift active:scale-[0.99] active:translate-y-0 ${
+      className={`min-w-0 grid overflow-hidden rounded-2xl border border-zinc-200 bg-white text-zinc-900 transition hover:-translate-y-0.5 hover:shadow-lift active:scale-[0.99] active:translate-y-0 ${
         readMoreHref ? "cursor-pointer" : ""
       }`}
     >
       {(company || (review.canEdit && showOwnerActions)) && (
-        <div className="flex items-center justify-between gap-3 border-b border-zinc-100 bg-zinc-50 px-5 py-2">
+        <div className="flex min-w-0 items-center justify-between gap-3 border-b border-zinc-100 bg-zinc-50 px-5 py-2">
           {company ? (
             <Link
               href={`/company/${company.slug}`}
               className="flex min-w-0 items-center gap-2.5 text-zinc-900 no-underline"
             >
               <CompanyLogo logoUrl={company.logoUrl} alt={company.name} size={24} />
-              <span className="truncate text-sm font-semibold">{company.name}</span>
+              <span className="block min-w-0 truncate text-sm font-semibold">{company.name}</span>
             </Link>
           ) : (
             <span />
@@ -193,7 +193,7 @@ export function ReviewCard({
           )}
         </div>
       )}
-      <div className="grid gap-[18px] p-5 pb-[22px]">
+      <div className="grid min-w-0 gap-[18px] p-5 pb-[22px]">
       <div className="flex items-start gap-3">
         <FaceIcon score={scoreToFace(review.experienceScore)} className="h-10 w-10 shrink-0 rounded-xl" />
         <div className="grid min-w-0 flex-1 gap-1">
@@ -306,7 +306,7 @@ function FactRow({ items }: { items: ({ icon: React.ReactElement; text: string }
           <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white text-zinc-400 ring-1 ring-zinc-200">
             {fact.icon}
           </span>
-          <span className="min-w-0 truncate">{fact.text}</span>
+          <span className="block min-w-0 truncate">{fact.text}</span>
         </div>
       ))}
     </div>

@@ -44,7 +44,7 @@ function BreakdownCard({ title, items }: { title: string; items: { label: string
           {items.map((item) => (
             <div key={item.label} className="grid gap-1">
               <div className="flex items-center justify-between text-xs text-zinc-600">
-                <span className="min-w-0 truncate">{item.label}</span>
+                <span className="block min-w-0 truncate">{item.label}</span>
                 <span className="shrink-0 font-semibold text-zinc-900">{item.count}</span>
               </div>
               <div className="h-1.5 overflow-hidden rounded-full bg-zinc-100">

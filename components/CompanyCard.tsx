@@ -14,7 +14,7 @@ export function CompanyCard({ company }: { company: Company }) {
   return (
     <Link
       href={`/company/${company.slug}`}
-      className="group grid gap-2 rounded-2xl border border-zinc-200 bg-white p-5 text-zinc-900 no-underline transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lift active:scale-[0.99] active:translate-y-0"
+      className="group grid min-w-0 gap-2 rounded-2xl border border-zinc-200 bg-white p-5 text-zinc-900 no-underline transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lift active:scale-[0.99] active:translate-y-0"
     >
       <div className="grid grid-cols-[54px_minmax(0,1fr)] items-center gap-4">
         <CompanyLogo logoUrl={company.logoUrl} alt={company.name} size={54} />
