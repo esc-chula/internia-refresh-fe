@@ -19,5 +19,8 @@ export const companyTypes = [
   "Research",
   "Education",
   "Entertainment",
+  "Beverage",
+  "Holding",
+  "Insurance",
   "Startups",
 ];
